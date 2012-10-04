@@ -72,21 +72,22 @@ class FaustSlider(FaustObject) :
     startp = remap(self.default, self.mn, self.mx, 0 + half_slider_girth, self.sa - half_slider_girth)
     bottom = startp - half_slider_girth
     top = startp + half_slider_girth
-    out = '<path id="IQ" d="MX0 Y0LX1 Y0LX1 Y1LX0 Y1LX0 Y0" style="fill:C;stroke:R" class="K" onclick="F(I,X,Y,MN,MX,S)"/>'
-    out = out.replace('X0', str(xy(self.o, bottom, 0)))
-    out = out.replace('X1', str(xy(self.o, top, self.wa)))
-    out = out.replace('Y0', str(xy(self.o, 0, bottom)))
-    out = out.replace('Y1', str(xy(self.o, self.wa, top)))
+    #out = '<path id="IQ" d="MX0 Y0LX1 Y0LX1 Y1LX0 Y1LX0 Y0" style="fill:C;stroke:R" class="K" onmousedown="(F(\'I\',T,P,MN,MX,S))()"/>'
+    out = '<path transform="translate(TX,TY)" id="IQ" d="M0 0LX 0LX YL0 YL0 0" style="fill:C;stroke:R" class="K" onmousedown="(F(\'I\',T,P,MN,MX,S))()"/>'
     out = out.replace('MN', str(self.mn))
     out = out.replace('MX', str(self.mx))
+    out = out.replace('TX', str(xy(self.o, bottom, 0)))
+    out = out.replace('TY', str(xy(self.o, 0, bottom)))
+    out = out.replace('X', str(xy(self.o, slider_girth, self.wa)))
+    out = out.replace('Y', str(xy(self.o, self.wa, slider_girth)))
     out = out.replace('S', str(self.step))
     out = out.replace('Q', str(ending))
     out = out.replace('C', fill)
     out = out.replace('R', stroke)
     out = out.replace('K', kls)
     out = out.replace('F', xy(self.o,'horizontal_slide','vertical_slide'))
-    out = out.replace('X', str(xy(self.o,self.sa,self.wa)))
-    out = out.replace('Y', str(xy(self.o,self.wa,self.sa)))
+    out = out.replace('T', str(self.sa))
+    out = out.replace('P', str(self.sp))
     out = out.replace('I', str(id_stem))
     return out
   def draw_sliding_part_inside_svg(self, id_stem) :
@@ -203,7 +204,7 @@ class SVGDocument(XMLDocument) :
     self.h = h
     self.verbose = verbose
   def svg_open(self) :
-    out = '<svg>'
+    out = '<svg xmlns="http://www.w3.org/2000/svg">'
     return out
   def svg_close(self) :
     out = '</svg>'
