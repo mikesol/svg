@@ -1,5 +1,6 @@
 import string
 import random
+import cmath
 
 X_AXIS = 0
 Y_AXIS = 1
@@ -15,6 +16,9 @@ CENTER = 0
 BLACK = (0,0,0)
 CYAN = (0,255,255)
 GREY = (100,100,100)
+
+INF = 1e21
+
 def other_axis(axis) :
   return (axis + 1) % NO_AXES
 
@@ -74,3 +78,47 @@ def log(i, c) :
 def randString(length=7, chars=string.letters):
   first = random.choice(string.letters[26:])
   return first+''.join([random.choice(chars) for i in range(length-1)])
+
+def sign(x) :
+  return x if x == 0 else int(abs(x) / x)
+
+# starting at a0, find all points between a0 and a0+sweep inclusive that are
+# multiples of 90
+# assumes that sweep is positive
+def find_all_90s(a0, sweep) :
+  total = 0
+  out = []
+  while a0 > total :
+    total += 90
+  while total <= a0 + sweep :
+    out.append(total)
+    total += 90
+  return out
+
+class Box(object) :
+  def __init__(self) :
+    self.x = (+INF,-INF)
+    self.y = (+INF,-INF)
+  def add_point(self, pt) :
+    self.x = (min(self.x[0], pt[0]), max(self.x[1], pt[0]))
+    self.y = (min(self.y[0], pt[1]), max(self.y[1], pt[1]))
+  def lens(self) :
+    assert(self.x[1] >= self.x[0])
+    assert(self.y[1] >= self.y[0])
+    return self.x[1] - self.x[0], self.y[1] - self.y[0]
+
+def rect_to_coord(r) :
+  return r.real, r.imag
+
+def coord_add(c0, c1) :
+  return c0[0] + c1[0], c0[1] + c1[1]
+
+def coord_sub(c0, c1) :
+  return c0[0] - c1[0], c0[1] - c1[1]
+
+def r2d(a) :
+  return a * 180. / cmath.pi
+
+def d2r(a) :
+  return a * cmath.pi / 180.
+

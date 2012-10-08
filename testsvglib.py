@@ -16,10 +16,11 @@ s2 = FaustVerticalSlider(mom=l1)
 l1.objects = [s0,s1,s2]
 ##########################
 l2 = LayoutManager(mom=l0)
-s3 = FaustVerticalSlider(mom=l2)
-s4 = FaustHorizontalSlider(mom=l2)
-s5 = FaustVerticalSlider(mom=l2)
-l2.objects = [s3,s4,s5]
+s3 = FaustRotatingButton(mom=l2)
+#s4 = FaustHorizontalSlider(mom=l2)
+#s5 = FaustVerticalSlider(mom=l2)
+#l2.objects = [s3,s4,s5]
+l2.objects = [s3]
 ##########################
 l0.objects = [l1,l2]
 
