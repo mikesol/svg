@@ -267,8 +267,8 @@ class LayoutManager(FaustObject) :
     # the call to jvalue with the leftover
     # use self.gravity, as object gravities will be used internally
     running_count = padding + jvalue(leftover[self.o], LEFT, self.gravity[self.o])
-    for x in range(len(self.objects)) :
-      object = self.objects[x]
+    for z in range(len(self.objects)) :
+      object = self.objects[z]
       dim = object.dims()
       # find dimensions
       nx = xy(self.o, dim[X_AXIS] * ratio, x)
@@ -281,6 +281,7 @@ class LayoutManager(FaustObject) :
       else :
         xv1 = xy(self.o, running_count, 0)
         xv2 = xy(self.o, running_count + (dim[X_AXIS] * (ratio - 1)), x - dim[X_AXIS])
+        log(self, ("RATIO", ratio, "X", x, "Y", y))
         log(self, ("X1", xv1, "X2", xv2, "LC", linear_combination(object.gravity[X_AXIS], xv1, xv2)))
         object.x = linear_combination(object.gravity[X_AXIS], xv1, xv2)
         yv1 = xy(self.o, 0, running_count)
@@ -309,7 +310,7 @@ class XMLDocument(object) :
     return out
 
 class SVGDocument(XMLDocument) :
-  def __init__(self, js='', css='', lm=None, w=800, h=400, verbose=False) :
+  def __init__(self, js='', css='', lm=None, w=1200, h=800, verbose=False) :
     self.js = js
     self.css = css
     self.lm = lm
