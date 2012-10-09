@@ -6,7 +6,7 @@ from xmlutilities import *
 d = SVGDocument(js=gulp('faust_js.js'), css=gulp('faust_css.css'), verbose=False)
 
 ##########################
-l0 = LayoutManager(mom=d)
+l0 = LayoutManager(mom=d,o=X_AXIS)
 d.lm = l0
 ##########################
 l1 = LayoutManager(mom=l0)
@@ -17,10 +17,9 @@ l1.objects = [s0,s1,s2]
 ##########################
 l2 = LayoutManager(mom=l0)
 s3 = FaustRotatingButton(mom=l2)
-#s4 = FaustHorizontalSlider(mom=l2)
-#s5 = FaustVerticalSlider(mom=l2)
-#l2.objects = [s3,s4,s5]
-l2.objects = [s3]
+s4 = FaustHorizontalSlider(mom=l2)
+s5 = FaustVerticalSlider(mom=l2)
+l2.objects = [s3,s4,s5]
 ##########################
 l0.objects = [l1,l2]
 

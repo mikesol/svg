@@ -163,7 +163,15 @@ function moveActiveRotatingButton(e)
 {
   var sliding_part = document.getElementById(_I);
 
-  var diff = 180. * (Math.atan2(e.clientY, e.clientX) - Math.atan2(prev[Y_AXIS], prev[X_AXIS])) / Math.PI;
+  var diff = 180. * (Math.atan2(e.clientY - _OY - _RY, e.clientX - _OX - _RX) - Math.atan2(prev[Y_AXIS] - _OY - _RY, prev[X_AXIS] - _OX - _RX)) / Math.PI;
+  // if diff is to great, the browser is going berzerk...
+  if (-180 > diff) {
+    diff += 360;
+  }
+  else if (diff > 180) {
+    diff -= 360;
+  }
+
   var transform = transformToArray(sliding_part.getAttribute("transform"));
   // we assume that there is only one element and that it is a transform
   // make sure to change this if things get more complicated
@@ -171,13 +179,18 @@ function moveActiveRotatingButton(e)
 
   var aval = transform[2][1] + diff;
   // minimum of the slider is to the bottom / left
-  
+
+  // extra if clauses avoid jerkiness from flips
   if (_A0 > aval) {
-    transform[2][1] = _A0;
+    if (transform[2][1] != _A0 + _SW - (_SW * _P)) {
+      transform[2][1] = _A0;
+    }
   }
   // maximum is to the top / right
   else if (aval > _A0 + _SW - (_SW * _P)) {
-    transform[2][1] = _A0 + _SW - (_SW * _P)
+    if (transform[2][1] != _A0) {
+      transform[2][1] = _A0 + _SW - (_SW * _P);
+    }
   }
   // if neither of the above are true, free to move by the difference
   else {
@@ -198,6 +211,12 @@ function clearIdCache() {
   _MN = 0;
   _MX = 0;
   _S = 0;
+  _A0 = 0;
+  _SW = 0;
+  _RX = 0;
+  _RY = 0;
+  _OX = 0;
+  _OY = 0;
 }
 
 document.onmousemove = moveActiveObject;
@@ -225,7 +244,7 @@ function vertical_slide(I, T, P, MN, MX, S) {
   initiate_slide(Y_AXIS, I, T, P,MN, MX, S);
 }
 
-function rotate_button(I,A0,SW,P,RX,RY,MN,MX,S) {
+function rotate_button(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S) {
   if (prev[X_AXIS] == DEVNULL) {
     updateXY(e);
   }
@@ -237,5 +256,7 @@ function rotate_button(I,A0,SW,P,RX,RY,MN,MX,S) {
   _MX = MX;
   _RX = RX;
   _RY = RY;
+  _OX = OX;
+  _OY = OY;
   _S = S;
 }

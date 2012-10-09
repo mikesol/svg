@@ -21,6 +21,15 @@ class FaustObject(object) :
     out = out.replace("X", str(self.x))
     out = out.replace("Y", str(self.y))
     return out
+  # code dup...
+  def get_x_offset(self) :
+    if not hasattr(self, 'mom') :
+      return self.x
+    return self.x + self.mom.get_x_offset() if self.mom else self.x
+  def get_y_offset(self) :
+    if not hasattr(self, 'mom') :
+      return self.y
+    return self.y + self.mom.get_y_offset() if self.mom else self.y
   def close_group_svg(self) :
     out = '</g>'
     return out
@@ -73,7 +82,7 @@ class FaustRotatingButton(FaustObject) :
     return (min([coord[0] for coord in coords]), min([coord[0] for coord in coords]))
   def mobility_string(self, id, start_rot) :
     # ugh, in svg, rotate is weird. need to tack on 180 :(
-    out = 'transform="translate(0,0) scale(1,1) rotate(SR,RX,RY)" id="ID" onmousedown="(rotate_button(\'ID\',A0,SW,P,RX,RY,MN,MX,S))()"'
+    out = 'transform="translate(0,0) scale(1,1) rotate(SR,RX,RY)" id="ID" onmousedown="(rotate_button(\'ID\',A0,SW,P,RX,RY,OX,OY,MN,MX,S))()"'
     torig = coord_sub((0,0), self.get_translation())
     out = out.replace("SR", str(start_rot + 180))
     out = out.replace("SW", str(self.sweep))
@@ -82,6 +91,8 @@ class FaustRotatingButton(FaustObject) :
     out = out.replace("S", str(self.step))
     out = out.replace("RX", str(torig[0]))
     out = out.replace("RY", str(torig[1]))
+    out = out.replace("OX", str(self.get_x_offset()))
+    out = out.replace("OY", str(self.get_y_offset()))
     out = out.replace("MN", str(self.mn))
     out = out.replace("MX", str(self.mx))
     out = out.replace("ID", str(id))
@@ -305,6 +316,8 @@ class SVGDocument(XMLDocument) :
     self.w = w
     self.h = h
     self.verbose = verbose
+  def get_x_offset(self) : return 0
+  def get_y_offset(self) : return 0
   def svg_open(self) :
     out = '<svg xmlns="http://www.w3.org/2000/svg">'
     return out
