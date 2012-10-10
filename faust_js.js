@@ -242,7 +242,7 @@ function moveActiveRotatingButton(e)
 function generic_label_update(id, c, l, h) {
   var label = document.getElementById("faust_label_"+id);
   var now = remap_and_bound(c, l, h, _MN, _MX);
-  label.textContent = _L+" :: "+now;
+  label.textContent = _L+" :: "+now.toFixed(4);
 }
 
 // gets rid of the current thing being dragged
