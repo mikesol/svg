@@ -16,6 +16,8 @@ CENTER = 0
 BLACK = (0,0,0)
 CYAN = (0,255,255)
 GREY = (100,100,100)
+PINK = (233,150,122)
+GREEN = (173,255,47)
 
 INF = 1e21
 
@@ -121,4 +123,11 @@ def r2d(a) :
 
 def d2r(a) :
   return a * cmath.pi / 180.
+
+def bound(v,m,n) :
+  mn = min(m,n)
+  mx = max(m,n)
+  if v < mn : return mn
+  if v > mx : return mx
+  return v
 

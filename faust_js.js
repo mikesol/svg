@@ -8,12 +8,45 @@ var _MN = 0; // minimum value of slider
 var _MX = 0; // maximum value of slider
 var _S = 0; // quantization scale of slider
 var _A = 0; // axis
+var _L = 0;
+// rotating button - document me
+var _A0 = 0;
+var _SW = 0;
+var _RX = 0;
+var _RY = 0;
+var _OX = 0;
+var _OY = 0;
+// button - document me
+var _F = 0;
 
 var DEVNULL = -5000;
 
 var prev = new Array();
 prev[X_AXIS] = DEVNULL;
 prev[Y_AXIS] = DEVNULL;
+
+// basic utilities
+function remap(v, mn0, mx0, mn1, mx1) {
+  var p = 1.0 * (v - mn0) / (mx0 - mn0);
+  return (p * (mx1 - mn1)) + mn1;
+}
+
+function bound(v,m,n) {
+  var mn = Math.min(m,n);
+  var mx = Math.max(m,n);
+  if (mn > v) { return mn; }
+  if (v > mx) { return mx; }
+  return v;
+}
+
+function remap_and_bound(v, mn0, mx0, mn1, mx1) {
+  return bound(remap(v, mn0, mx0, mn1, mx1), mn1, mx1);
+}
+
+function unique(s) {
+  var spl = s.split("_");
+  return spl[spl.length - 1];
+}
 
 // parser of an object's transform
 
@@ -141,18 +174,21 @@ function moveActiveSlider(e)
   // make sure to change this if things get more complicated
   // actually, just make sure not to make things more complicated...
 
+  var aval = transform[0][_A + 1] + diff;
+
   // minimum of the slider is to the bottom / left
-  if (0 > transform[0][_A + 1] + diff) {
+  if (0 > aval) {
     transform[0][_A + 1] = 0;
   }
   // maximum is to the top / right
-  else if (transform[0][_A + 1] + diff > _T - (_T * _P)) {
+  else if (aval > _T - (_T * _P)) {
     transform[0][_A + 1] = _T - (_T * _P);
   }
   // if neither of the above are true, free to move by the difference
   else {
-    transform[0][_A + 1] = transform[0][_A + 1] + diff;
+    transform[0][_A + 1] = aval;
   }
+  generic_label_update(unique(_I), aval, 0, _T - (_T * _P));
   var movetothis = arrayToTransform(transform);
   sliding_part.setAttribute("transform", movetothis);
   updateXY(e);
@@ -196,33 +232,46 @@ function moveActiveRotatingButton(e)
   else {
     transform[2][1] = aval;
   }
+  generic_label_update(unique(_I), aval, _A0, _A0 + _SW - (_SW * _P));
   var movetothis = arrayToTransform(transform);
   sliding_part.setAttribute("transform", movetothis);
   updateXY(e);
   return true;
 }
 
+function generic_label_update(id, c, l, h) {
+  var label = document.getElementById("faust_label_"+id);
+  var now = remap_and_bound(c, l, h, _MN, _MX);
+  label.textContent = _L+" :: "+now;
+}
+
 // gets rid of the current thing being dragged
 function clearIdCache() {
-  _A = 0;
+  // generic
   _I = 0;
   _T = 0;
   _P = 0;
   _MN = 0;
   _MX = 0;
   _S = 0;
+  _L = 0;
+  // slider
+  _A = 0;
+  // rotating button
   _A0 = 0;
   _SW = 0;
   _RX = 0;
   _RY = 0;
   _OX = 0;
   _OY = 0;
+  // button
+  _F = 0;
 }
 
 document.onmousemove = moveActiveObject;
 document.onmouseup = clearIdCache;
 
-function initiate_slide(A, I, T, P, MN, MX, S) {
+function initiate_slide(A, I, T, P, MN, MX, S, L) {
   // in case we haven't initialized things yet
   if (prev[X_AXIS] == DEVNULL) {
     updateXY(e);
@@ -234,17 +283,18 @@ function initiate_slide(A, I, T, P, MN, MX, S) {
   _MN = MN;
   _MX = MX;
   _S = S;
+  _L = L;
 }
 
-function horizontal_slide(I, T, P, MN, MX, S) {
-  initiate_slide(X_AXIS, I, T,P,MN, MX, S);
+function horizontal_slide(I, T, P, MN, MX, S, L) {
+  initiate_slide(X_AXIS, I, T,P,MN, MX, S, L);
 }
 
-function vertical_slide(I, T, P, MN, MX, S) {
-  initiate_slide(Y_AXIS, I, T, P,MN, MX, S);
+function vertical_slide(I, T, P, MN, MX, S, L) {
+  initiate_slide(Y_AXIS, I, T, P,MN, MX, S, L);
 }
 
-function rotate_button(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S) {
+function rotate_button(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S, L) {
   if (prev[X_AXIS] == DEVNULL) {
     updateXY(e);
   }
@@ -252,6 +302,7 @@ function rotate_button(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S) {
   _A0 = A0;
   _SW = SW;
   _P = P;
+  _L = L;
   _MN = MN;
   _MX = MX;
   _RX = RX;
@@ -259,4 +310,18 @@ function rotate_button(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S) {
   _OX = OX;
   _OY = OY;
   _S = S;
+}
+
+function button_color_changer(I, F) {
+  // for now, this is an easier function because no dragging is involved...
+  var button = document.getElementById(I);
+  button.style.fill = F;
+}
+
+function button_up(I, F) {
+  button_color_changer(I, F);
+}
+
+function button_down(I, F) {
+  button_color_changer(I, F);
 }
