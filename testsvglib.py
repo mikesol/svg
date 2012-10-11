@@ -20,7 +20,7 @@ l2 = LayoutManager(mom=l0)
 s3 = FaustRotatingButton(mom=l2)
 s4 = FaustButton(mom=l2)
 #s5 = FaustVerticalSlider(mom=l2)
-s5 = FaustCheckBox(mom=l2)
+s5 = FaustCheckButton(mom=l2)
 l2.objects = [s3,s4,s5]
 #l2.objects = [s3]
 ##########################
