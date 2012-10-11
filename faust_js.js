@@ -325,3 +325,17 @@ function button_up(I, F) {
 function button_down(I, F) {
   button_color_changer(I, F);
 }
+
+function change_checkbox(I) {
+  var box = document.getElementById(I);console.log(box.style.opacity);
+
+  if (box.style.opacity == 1.0) {
+    box.style.opacity = 0.0;
+  }
+  else if (box.style.opacity == 0.0) {
+    box.style.opacity = 1.0;
+  }
+  else {
+    alert("malfunctional checkbox");
+  }
+}

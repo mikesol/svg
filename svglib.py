@@ -240,6 +240,57 @@ class FaustVerticalSlider(FaustSlider) :
   def __init__(self, mom=None, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding=TEXT_HEIGHT, gravity=(CENTER, CENTER), fill=CYAN) :
     FaustSlider.__init__(self, mom=mom, o=Y_AXIS, wa=wa, sa=sa, sp=sp, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding=lpadding, gravity=gravity, fill=fill)
 
+class FaustCheckBox(FaustObject) :
+  '''
+  '''
+  MAGIC = 19
+  def __init__(self, mom=None, d=19, label='foo', gravity=(CENTER, CENTER), fill=PINK, default=False, lpadding=TEXT_HEIGHT) :
+    FaustObject.__init__(self)
+    # everything in terms of 19 because that's what the scale of the check is
+    # the check is hardcoded for now in the javascript document...
+    self.mom = mom
+    self.d = d
+    self.label = label
+    self.gravity = gravity # [x,y] gravity for SELF
+    self.default = default
+    self.fill = fill
+    self.lpadding = lpadding
+  def internal_dims(self) :
+    log(self, ("DIMS FOR CHECKBOX", self.d, self.d))
+    return self.d, self.d
+  def dims(self) :
+    ugh = self.internal_dims()
+    return ugh[0], ugh[1] + self.lpadding + TEXT_PADDING + (self.d * 0.1 / FaustCheckBox.MAGIC) # kludge for overhang of check
+  def draw_box_svg(self, id) :
+    out = '<path d="M0 0LD 0LD DL0 DL0 0" style="fill:white;stroke:black;" onmousedown="(change_checkbox(\'I\'))()"/>'
+    out = out.replace('D', str(self.d))
+    out = out.replace('I', id)
+    return out
+  def draw_check_svg(self,id) :
+    # ugh...for now, we do disappearing based on opacity
+    out = '<path transform="scale(S,S) translate(-1.0896806, -4.3926201)" id="I" d="M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z" style="opacity:O;" fill="F" onmousedown="(change_checkbox(\'I\'))()"/>'
+    out = out.replace('F', color_to_rgb(self.fill))
+    out = out.replace('O', str(1.0 if self.default else 0.0))
+    out = out.replace('S', str(self.d * 1.0 / FaustCheckBox.MAGIC))
+    out = out.replace('I', id)
+    return out
+  def draw_label_svg(self) :
+    out = '<text transform="translate(0,Y)"><tspan>L</tspan></text>'
+    out = out.replace('Y',str(self.internal_dims()[1] + self.lpadding))
+    out = out.replace("L",str(self.label))
+    return out
+  def export_to_svg(self) :
+    # In svg, the width and height of text can be guessed but is often
+    # browser specific. We get around this by always adding the text
+    # after everything else so nothing else's position depends on it
+    id = randString()
+    group_open = self.open_group_svg()
+    box = self.draw_box_svg(id)
+    check = self.draw_check_svg(id)
+    label = self.draw_label_svg()
+    group_close = self.close_group_svg()
+    return group_open + box + label + check + group_close
+
 class FaustButton(FaustObject) :
   '''
   '''
