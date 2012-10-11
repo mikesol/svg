@@ -16,6 +16,11 @@ TEXT_HEIGHT = 15
 TEXT_PADDING = 10
 
 class FaustObject(object) :
+  def open_group_svg(self) :
+    out = '<g transform="translate(X,Y)">'
+    out = out.replace("X", str(self.x))
+    out = out.replace("Y", str(self.y))
+    return out
   # code dup...
   def get_x_offset(self) :
     if not hasattr(self, 'mom') :
@@ -25,25 +30,11 @@ class FaustObject(object) :
     if not hasattr(self, 'mom') :
       return self.y
     return self.y + self.mom.get_y_offset() if self.mom else self.y
-
-class SVGObject(object) :
-  def open_group_svg(self) :
-    out = '<g transform="translate(X,Y)">'
-    out = out.replace("X", str(self.x))
-    out = out.replace("Y", str(self.y))
-    return out
   def close_group_svg(self) :
     out = '</g>'
     return out
-  def open_foreign_object_svg(self, w=600, h=200) :
-    out = '<foreignObject width="W" height="H">'
-    out = out.replace("W", str(w))
-    out = out.replace("H", str(h))
-    return out
-  def close_foreign_object_svg(self) :
-    return '</foreignObject>'
 
-class FaustRotatingButton(FaustObject, SVGObject) :
+class FaustRotatingButton(FaustObject) :
   '''
   ALL ANGLES EXPRESSED IN DEGREES
   a0 = initial angle
@@ -158,7 +149,7 @@ class FaustRotatingButton(FaustObject, SVGObject) :
     group_close = self.close_group_svg()
     return group_open + unsliding_part + sliding_part + label + group_close
 
-class FaustSlider(FaustObject, SVGObject) :
+class FaustSlider(FaustObject) :
   '''
   wa = size of the weak axis
   sa = size of the strong axis
@@ -168,6 +159,7 @@ class FaustSlider(FaustObject, SVGObject) :
   default = default value
   '''
   def __init__(self, mom=None, o=X_AXIS, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding=TEXT_HEIGHT, gravity=(CENTER, CENTER), fill=CYAN) :
+    FaustObject.__init__(self)
     self.mom = mom
     self.o = o
     self.wa = wa
@@ -248,11 +240,12 @@ class FaustVerticalSlider(FaustSlider) :
   def __init__(self, mom=None, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding=TEXT_HEIGHT, gravity=(CENTER, CENTER), fill=CYAN) :
     FaustSlider.__init__(self, mom=mom, o=Y_AXIS, wa=wa, sa=sa, sp=sp, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding=lpadding, gravity=gravity, fill=fill)
 
-class FaustCheckButton(FaustObject, SVGObject) :
+class FaustCheckBox(FaustObject) :
   '''
   '''
   MAGIC = 19
   def __init__(self, mom=None, d=19, label='foo', gravity=(CENTER, CENTER), fill=PINK, default=False, lpadding=TEXT_HEIGHT) :
+    FaustObject.__init__(self)
     # everything in terms of 19 because that's what the scale of the check is
     # the check is hardcoded for now in the javascript document...
     self.mom = mom
@@ -267,7 +260,7 @@ class FaustCheckButton(FaustObject, SVGObject) :
     return self.d, self.d
   def dims(self) :
     ugh = self.internal_dims()
-    return ugh[0], ugh[1] + self.lpadding + TEXT_PADDING + (self.d * 0.1 / FaustCheckButton.MAGIC) # kludge for overhang of check
+    return ugh[0], ugh[1] + self.lpadding + TEXT_PADDING + (self.d * 0.1 / FaustCheckBox.MAGIC) # kludge for overhang of check
   def draw_box_svg(self, id) :
     out = '<path d="M0 0LD 0LD DL0 DL0 0" style="fill:white;stroke:black;" onmousedown="(change_checkbox(\'I\'))()"/>'
     out = out.replace('D', str(self.d))
@@ -278,7 +271,7 @@ class FaustCheckButton(FaustObject, SVGObject) :
     out = '<path transform="scale(S,S) translate(-1.0896806, -4.3926201)" id="I" d="M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z" style="opacity:O;" fill="F" onmousedown="(change_checkbox(\'I\'))()"/>'
     out = out.replace('F', color_to_rgb(self.fill))
     out = out.replace('O', str(1.0 if self.default else 0.0))
-    out = out.replace('S', str(self.d * 1.0 / FaustCheckButton.MAGIC))
+    out = out.replace('S', str(self.d * 1.0 / FaustCheckBox.MAGIC))
     out = out.replace('I', id)
     return out
   def draw_label_svg(self) :
@@ -298,58 +291,11 @@ class FaustCheckButton(FaustObject, SVGObject) :
     group_close = self.close_group_svg()
     return group_open + box + label + check + group_close
 
-class FaustNumEntry(FaustObject, SVGObject, HTMLObject) :
-  '''
-  because of limitations in svg, this needs to be done in HTML.
-  it is possible to implement this in SVG with lots of work
-  (see http://www.carto.net/svg/gui/textbox/), but it is a pain...
-  so, we use a foreignObject
-  '''
-  def __init__(self, mom=None, w=40, h=20 label='foo', gravity=(CENTER, CENTER), default=0.0, lpadding=TEXT_HEIGHT) :
-    # everything in terms of 19 because that's what the scale of the check is
-    # the check is hardcoded for now in the javascript document...
-    self.mom = mom
-    self.w = w
-    self.h = h
-    self.label = label
-    self.gravity = gravity # [x,y] gravity for SELF
-    self.default = default
-    self.lpadding = lpadding
-  def internal_dims(self) :
-    log(self, ("DIMS FOR TEXT BOX", self.w, self.h))
-    return self.w, self.h
-  def dims(self) :
-    ugh = self.internal_dims()
-    return ugh[0], ugh[1] + self.lpadding + TEXT_PADDING
-  def draw_entry_html(self, id) :
-    out = '<input >'
-    out = out.replace('D', str(self.d))
-    out = out.replace('I', id)
-    return out
-  def draw_label_svg(self) :
-    out = '<text transform="translate(0,Y)"><tspan>L</tspan></text>'
-    out = out.replace('Y',str(self.internal_dims()[1] + self.lpadding))
-    out = out.replace("L",str(self.label))
-    return out
-  def export_to_svg(self) :
-    # In svg, the width and height of text can be guessed but is often
-    # browser specific. We get around this by always adding the text
-    # after everything else so nothing else's position depends on it
-    id = randString()
-    group_open = self.open_group_svg()
-    foreign_object_open = self.open_foreign_object_svg(w=600, h=200) :
-    body_open = self.body_open_with_xmlns()
-    entry = self.draw_entry_html(id)
-    body_close = self.body_close()
-    foreign_object_close = self.close_foreign_object_svg()
-    label = self.draw_label_svg()
-    group_close = self.close_group_svg()
-    return group_open + foreign_object_open + body_open + label + body_close + foreign_object_close + group_close
-
-class FaustButton(FaustObject, SVGObject) :
+class FaustButton(FaustObject) :
   '''
   '''
   def __init__(self, mom=None, w=80, h=40, label='foo', gravity=(CENTER, CENTER), fillOn=PINK, fillOff=GREEN, baselineSkip = 5) :
+    FaustObject.__init__(self)
     self.mom = mom
     self.w = w
     self.h = h
@@ -387,7 +333,7 @@ class FaustButton(FaustObject, SVGObject) :
     group_close = self.close_group_svg()
     return group_open + button + label + group_close
 
-class LayoutManager(FaustObject, SVGObject) :
+class LayoutManager(FaustObject) :
   def __init__(self, mom=None, o=X_AXIS, padding=10, objects=[], gravity = (CENTER, CENTER), label='foo', lpadding=TEXT_HEIGHT) :
     self.mom = mom
     self.o = o
@@ -472,23 +418,6 @@ class XMLDocument(object) :
     return out
   def css_close(self) :
     out = '</style>'
-    return out
-
-class HTMLDocument(XMLDocument) :
-  def html_open(self) :
-    out = '<html xmlns="http://www.w3.org/1999/xhtml">'
-    return out
-  def html_close(self) :
-    out = '</html>'
-    return out
-  def body_open(self) :
-    out = '<body>'
-    return out
-  def body_open_with_xmlns(self) :
-    out = '<body xmlns="http://www.w3.org/1999/xhtml">'
-    return out
-  def body_close(self) :
-    out = '</body>'
     return out
 
 class SVGDocument(XMLDocument) :
