@@ -6,14 +6,21 @@ cover all these cases.
 the goal is to find the minimum number of elemetns that can articulate our needs
 - path for lines and bezier curves
 - arc for circles and parts of circles
+
+
+All value readers could potentially be activated from the javascript.
+Those that are passive just have a passive flag set.
 '''
 
 from utilities import *
 import cmath
 
 # m4g1c values
-TEXT_HEIGHT = 15
+TEXT_HEIGHT = 20
 TEXT_PADDING = 10
+VALUE_BOX_W = 60
+VALUE_BOX_H = TEXT_HEIGHT # need to maybe change this relationship...
+TEXT_BOX_PADDING = 3
 
 class FaustObject(object) :
   def open_group_svg(self) :
@@ -32,13 +39,38 @@ class FaustObject(object) :
     out = '</g>'
     return out
 
-class FaustRotatingButton(FaustObject) :
+#make_key_sink(\'{2}\', {3}, {4}, {5},{6})
+class FaustIncrementalObject(FaustObject) :
+  def draw_value_box_svg(self, id, fn) :
+    out = '<path transform="translate(0,{4})" id="faust_value_box_{2}" d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:white;stroke:black;" onmousedown="({3})()"/>'.format(
+      self.value_box_w,
+      self.value_box_h,
+      id,
+      fn,
+      self.internal_dims()[1] + self.box_padding)
+    return out
+  def draw_value_svg(self,id,fn) :
+    out = '<text transform="translate({0},{1})"><tspan id=\'faust_value_{2}\' onmousedown="({3})()">{4}</tspan></text>'.format(
+      self.box_padding,
+      self.internal_dims()[1] + self.lpadding_y,
+      id,
+      fn,
+      self.default)
+    return out
+  def draw_label_svg(self, id) :
+    out = '<text transform="translate(0,{0})"><tspan id="{1}">{2}</tspan></text>'.format(
+      self.internal_dims()[1] + self.lpadding_y + self.lpadding_y,
+      'faust_label_'+id,
+      self.label)
+    return out
+
+class FaustRotatingButton(FaustIncrementalObject) :
   '''
   ALL ANGLES EXPRESSED IN DEGREES
   a0 = initial angle
   sweep = number of degrees :: ALWAYS POSITIVE
   '''
-  def __init__(self, mom=None, r=50, a0=180, sweep=180, sp=0.1, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding=TEXT_HEIGHT, gravity=(CENTER, CENTER), fill=CYAN) :
+  def __init__(self, mom=None, r=50, a0=180, sweep=180, sp=0.1, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H) :
     self.mom = mom
     self.r = r
     if sweep < 0 :
@@ -56,9 +88,12 @@ class FaustRotatingButton(FaustObject) :
     self.mn = mn
     self.mx = mx
     self.step = step
-    self.lpadding = lpadding
+    self.box_padding = box_padding
+    self.lpadding_y = lpadding_y
     self.gravity = gravity # [x,y] gravity for SELF
     self.fill = fill
+    self.value_box_w = value_box_w
+    self.value_box_h = value_box_h
   def get_maybe_extremal_coords(self) :
     angles = sorted(list(set(find_all_90s(self.a0, self.sweep) + [self.a0, self.a0 + self.sweep])))
     return [rect_to_coord(cmath.rect(*polar)) for polar in [(self.r, d2r(angle)) for angle in angles]]+[(0,0)]
@@ -72,7 +107,7 @@ class FaustRotatingButton(FaustObject) :
     return ugh
   def dims(self) :
     ugh = self.internal_dims()
-    return ugh[0], ugh[1] + self.lpadding + TEXT_PADDING
+    return ugh[0], ugh[1] + (2 * self.lpadding_y) + TEXT_PADDING
   def get_translation(self) :
     # first, we need to translate the coordinate space so that the
     # left-bottom is 0,0
@@ -81,7 +116,7 @@ class FaustRotatingButton(FaustObject) :
   def mobility_string(self, id, start_rot) :
     # ugh, in svg, rotate is weird. need to tack on 180 :(
     torig = coord_sub((0,0), self.get_translation())
-    out = 'transform="translate(0,0) scale(1,1) rotate({0},{1},{2})" id="{3}" onmousedown="(rotate_button(\'{3}\',{4},{5},{6},{1},{2},{7},{8},{9},{10},{11},\'{12}\'))()" onmouseup="clearIdCache()"'.format(
+    out = 'transform="translate(0,0) scale(1,1) rotate({0},{1},{2})" id="{3}" onmousedown="(rotate_button(\'{3}\',{4},{5},{6},{1},{2},{7},{8},{9},{10},{11},\'{12}\'))()" onmouseup="mouseUpFunction()"'.format(
       start_rot + 180, # 0
       torig[0], # 1
       torig[1], # 2
@@ -105,14 +140,22 @@ class FaustRotatingButton(FaustObject) :
       end[0], end[1],
       fill, stroke, instruction)
     return out
-  def draw_unsliding_part_svg(self) :
+  def draw_unsliding_part_svg(self, id) :
     # first, we need to translate the coordinate space so that the
     # left-bottom is 0,0
     trans = self.get_translation()
     start = coord_sub(rect_to_coord(cmath.rect(self.r, d2r(self.a0))), trans)
     end = coord_sub(rect_to_coord(cmath.rect(self.r, d2r(self.a0 + self.sweep))), trans)
     org = coord_sub((0,0), trans)
-    return FaustRotatingButton.generic_draw(org, start, end, self.r, color_to_rgb(self.fill), color_to_rgb(BLACK), '', self.sweep < 180)
+    return FaustRotatingButton.generic_draw(
+      org,
+      start,
+      end,
+      self.r,
+      color_to_rgb(self.fill),
+      color_to_rgb(BLACK),
+      'id="{0}"'.format('faust_rotating_button_unsliding_part_'+id),
+      self.sweep < 180)
   def draw_sliding_part_svg(self, id) :
     trans = self.get_translation()
     slider_angle = self.sweep * self.sp
@@ -125,20 +168,37 @@ class FaustRotatingButton(FaustObject) :
     org = coord_sub((0,0), trans)
     instruction = self.mobility_string('faust_rotating_button_sliding_part_'+id, startp - half_slider_angle)
     return FaustRotatingButton.generic_draw(org, start, end, self.r, color_to_rgb(GREY), color_to_rgb(BLACK), instruction, self.sweep * self.sp < 180)
-  def draw_label_svg(self, id) :
-    out = '<text transform="translate(0,{0})"><tspan id="{1}">{2} :: {3}</tspan></text>'.format(
-      self.internal_dims()[1] + self.lpadding, 'faust_label_'+id, self.label, self.default)
+  def make_key_sink_function(self, id) :
+    # ugh...code dup...consolodate if possible...
+    torig = coord_sub((0,0), self.get_translation())
+    out = 'rotating_button_key_sink(\'{0}\',{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},\'{12}\')'.format(
+      id, # 0
+      self.a0 + 180, # 1
+      self.sweep, # 2
+      self.sp, # 3
+      torig[0], # 1
+      torig[1], # 2
+      self.get_x_offset(), # 4
+      self.get_y_offset(), # 5
+      self.mn, # 6
+      self.mx, # 7
+      self.step, # 8
+      self.default,
+      self.label) # 10
     return out
   def export_to_svg(self) :
     id = randString()
+    fn = self.make_key_sink_function(id)
     group_open = self.open_group_svg()
-    unsliding_part = self.draw_unsliding_part_svg()
+    unsliding_part = self.draw_unsliding_part_svg(id)
     sliding_part = self.draw_sliding_part_svg(id)
+    box = self.draw_value_box_svg(id, fn)
+    value = self.draw_value_svg(id, fn)
     label = self.draw_label_svg(id)
     group_close = self.close_group_svg()
-    return group_open + unsliding_part + sliding_part + label + group_close
+    return group_open + unsliding_part + sliding_part + box + value + label + group_close
 
-class FaustSlider(FaustObject) :
+class FaustSlider(FaustIncrementalObject) :
   '''
   wa = size of the weak axis
   sa = size of the strong axis
@@ -147,8 +207,7 @@ class FaustSlider(FaustObject) :
   unit = unit
   default = default value
   '''
-  def __init__(self, mom=None, o=X_AXIS, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding=TEXT_HEIGHT, gravity=(CENTER, CENTER), fill=CYAN) :
-    FaustObject.__init__(self)
+  def __init__(self, mom=None, o=X_AXIS, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H) :
     self.mom = mom
     self.o = o
     self.wa = wa
@@ -160,30 +219,39 @@ class FaustSlider(FaustObject) :
     self.mn = mn
     self.mx = mx
     self.step = step
-    self.lpadding = lpadding
+    self.lpadding_y = lpadding_y
+    self.box_padding = box_padding
     self.gravity = gravity # [x,y] gravity for SELF
     self.fill = fill
-  def dims(self) :
+    self.value_box_w = value_box_w
+    self.value_box_h = value_box_h
+  def internal_dims(self) :
     x = xy(self.o, self.sa, self.wa)
     y = xy(self.o, self.wa, self.sa)
-    log(self, ("DIMS FOR SLIDER", x, y + self.lpadding + TEXT_PADDING))
-    return x, y + self.lpadding + TEXT_PADDING
-  def draw_unsliding_component_svg(self, fill, stroke) :
-    out = '<path d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:{2};stroke:{3};" />'.format(
+    return x,y
+  def dims(self) :
+    ugh = self.internal_dims()
+    # include label and value in y
+    ugh = (ugh[0], ugh[1] + (2 * self.lpadding_y) + TEXT_PADDING)
+    log(self, ("DIMS FOR SLIDER",) + ugh)
+    return ugh
+  def draw_unsliding_component_svg(self, fill, stroke, id) :
+    out = '<path d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:{2};stroke:{3};" id="{4}" />'.format(
       xy(self.o, self.sa, self.wa), xy(self.o, self.wa, self.sa),
-      fill, stroke)
+      fill, stroke,
+      'faust_slider_unsliding_part_'+id)
     return out
-  def draw_unsliding_part_svg(self) :
-    return self.draw_unsliding_component_svg(color_to_rgb(self.fill), color_to_rgb(BLACK))
-  def draw_sliding_component_svg(self, fill, stroke, kls, id) :
+  def draw_unsliding_part_svg(self, id) :
+    return self.draw_unsliding_component_svg(color_to_rgb(self.fill), color_to_rgb(BLACK), id)
+  def draw_sliding_component_svg(self, fill, stroke, id) :
     slider_girth = self.sa  * self.sp
     half_slider_girth = slider_girth * 0.5
     startp = remap(self.default, self.mn, self.mx, 0 + half_slider_girth, self.sa - half_slider_girth)
     bottom = startp - half_slider_girth
     top = startp + half_slider_girth
-    out = '<path transform="translate({0},{1})" id="{2}" d="M0 0L{3} 0L{3} {4}L0 {4}L0 0" style="fill:{5};stroke:{6}" onmousedown="({7}(\'{2}\',{8},{9},{10},{11},{12},\'{13}\'))()" onmouseup="clearIdCache()"/>'.format(
+    out = '<path transform="translate({0},{1})" id="{2}" d="M0 0L{3} 0L{3} {4}L0 {4}L0 0" style="fill:{5};stroke:{6}" onmousedown="({7}(\'{2}\',{8},{9},{10},{11},{12},\'{13}\'))()" onmouseup="mouseUpFunction()"/>'.format(
       xy(self.o, bottom, 0), xy(self.o, 0, bottom),
-      kls+'_'+id,
+      'faust_slider_sliding_part_'+id,
       xy(self.o, slider_girth, self.wa),
       xy(self.o, self.wa, slider_girth),
       fill, stroke,
@@ -196,40 +264,49 @@ class FaustSlider(FaustObject) :
       self.step,
       self.label)
     return out
-  def draw_sliding_part_svg(self, id) :
-    return self.draw_sliding_component_svg(color_to_rgb(GREY), color_to_rgb(BLACK), 'faust_slider_sliding_part', id)
-  def draw_label_svg(self, id) :
-    out = '<text transform="translate(0,{0})"><tspan id="{1}">{2} :: {3}</tspan></text>'.format(
-      xy(self.o,self.wa,self.sa) + self.lpadding,
-      'faust_label_'+id,
-      self.label,
-      self.default)
+  def make_key_sink_function(self, id) :
+    # ugh...code dup...consolodate if possible...
+    out = '{0}_key_sink(\'{1}\',{2},{3},{4},{5},{6},{7},\'{8}\')'.format(
+      xy(self.o,'horizontal_slide','vertical_slide'),
+      id, # 0
+      self.sa,
+      self.sp,
+      self.mn,
+      self.mx,
+      self.step,
+      self.default,
+      self.label)
     return out
+  def draw_sliding_part_svg(self, id) :
+    return self.draw_sliding_component_svg(color_to_rgb(GREY), color_to_rgb(BLACK), id)
   def export_to_svg(self) :
     # In svg, the width and height of text can be guessed but is often
     # browser specific. We get around this by always adding the text
     # after everything else so nothing else's position depends on it
     id = randString()
     group_open = self.open_group_svg()
-    unsliding_part = self.draw_unsliding_part_svg()
+    fn = self.make_key_sink_function(id)
+    unsliding_part = self.draw_unsliding_part_svg(id)
     sliding_part = self.draw_sliding_part_svg(id)
+    box = self.draw_value_box_svg(id, fn)
+    value = self.draw_value_svg(id, fn)
     label = self.draw_label_svg(id)
     group_close = self.close_group_svg()
-    return group_open + unsliding_part + sliding_part + label + group_close
+    return group_open + unsliding_part + sliding_part + box + value + label + group_close
 
 class FaustHorizontalSlider(FaustSlider) :
-  def __init__(self, mom=None, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding=TEXT_HEIGHT, gravity=(CENTER, CENTER), fill=CYAN) :
-    FaustSlider.__init__(self, mom=mom, o=X_AXIS, wa=wa, sa=sa, sp=sp, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding=lpadding, gravity=gravity, fill=fill)
+  def __init__(self, mom=None, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H) :
+    FaustSlider.__init__(self, mom=mom, o=X_AXIS, wa=wa, sa=sa, sp=sp, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h)
 
 class FaustVerticalSlider(FaustSlider) :
-  def __init__(self, mom=None, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding=TEXT_HEIGHT, gravity=(CENTER, CENTER), fill=CYAN) :
-    FaustSlider.__init__(self, mom=mom, o=Y_AXIS, wa=wa, sa=sa, sp=sp, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding=lpadding, gravity=gravity, fill=fill)
+  def __init__(self, mom=None, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H) :
+    FaustSlider.__init__(self, mom=mom, o=Y_AXIS, wa=wa, sa=sa, sp=sp, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h)
 
 class FaustCheckBox(FaustObject) :
   '''
   '''
   MAGIC = 19
-  def __init__(self, mom=None, d=19, label='foo', gravity=(CENTER, CENTER), fill=PINK, default=False, lpadding=TEXT_HEIGHT) :
+  def __init__(self, mom=None, d=19, label='foo', gravity=(CENTER, CENTER), fill=PINK, default=False, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING,) :
     FaustObject.__init__(self)
     # everything in terms of 19 because that's what the scale of the check is
     # the check is hardcoded for now in the javascript document...
@@ -239,20 +316,20 @@ class FaustCheckBox(FaustObject) :
     self.gravity = gravity # [x,y] gravity for SELF
     self.default = default
     self.fill = fill
-    self.lpadding = lpadding
+    self.lpadding_y = lpadding_y
   def internal_dims(self) :
     log(self, ("DIMS FOR CHECKBOX", self.d, self.d))
     return self.d, self.d
   def dims(self) :
     ugh = self.internal_dims()
-    return ugh[0], ugh[1] + self.lpadding + TEXT_PADDING + (self.d * 0.1 / FaustCheckBox.MAGIC) # kludge for overhang of check
+    return ugh[0], ugh[1] + self.lpadding_y + TEXT_PADDING + (self.d * 0.1 / FaustCheckBox.MAGIC) # kludge for overhang of check
   def draw_box_svg(self, id) :
-    out = '<path d="M0 0L{0} 0L{0} {0}L0 {0}L0 0" style="fill:white;stroke:black;" onmousedown="(change_checkbox(\'{1}\'))()" onmouseup="clearIdCache()"/>'.format(
+    out = '<path d="M0 0L{0} 0L{0} {0}L0 {0}L0 0" style="fill:white;stroke:black;" onmousedown="(change_checkbox(\'{1}\'))()" onmouseup="mouseUpFunction()"/>'.format(
       self.d, id)
     return out
   def draw_check_svg(self,id) :
     # ugh...for now, we do disappearing based on opacity
-    out = '<path transform="scale({0},{0}) translate(-1.0896806, -4.3926201)" id="{3}" d="M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z" style="opacity:{1};" fill="{2}" onmousedown="(change_checkbox(\'{3}\'))()" onmouseup="clearIdCache()"/>'.format(
+    out = '<path transform="scale({0},{0}) translate(-1.0896806, -4.3926201)" id="{3}" d="M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z" style="opacity:{1};" fill="{2}" onmousedown="(change_checkbox(\'{3}\'))()" onmouseup="mouseUpFunction()"/>'.format(
       self.d * 1.0 / FaustCheckBox.MAGIC,
       1.0 if self.default else 0.0,
       color_to_rgb(self.fill),
@@ -260,7 +337,7 @@ class FaustCheckBox(FaustObject) :
     return out
   def draw_label_svg(self) :
     out = '<text transform="translate(0,{0})"><tspan>{1}</tspan></text>'.format(
-      self.internal_dims()[1] + self.lpadding,
+      self.internal_dims()[1] + self.lpadding_y,
       self.label)
     return out
   def export_to_svg(self) :
@@ -317,65 +394,51 @@ class FaustButton(FaustObject) :
     group_close = self.close_group_svg()
     return group_open + button + label + group_close
 
-class FaustNumericalEntry(FaustObject) :
+class FaustNumericalEntry(FaustIncrementalObject) :
   '''
   Uses keydowns to fill the box.
   Heavy on Javascript.
   '''
-  def __init__(self, mom=None, w=80, h=40, text_inset=(3,3), label='foo', gravity=(CENTER, CENTER), mn=0, mx=100, default=50, lpadding = TEXT_HEIGHT) :
+  def __init__(self, mom=None, label='foo', gravity=(CENTER, CENTER), mn=0, mx=100, default=50, step=1, lpadding_y = TEXT_HEIGHT, box_padding = TEXT_BOX_PADDING, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H) :
     FaustObject.__init__(self)
     self.mom = mom
-    self.w = w
-    self.h = h
+    self.value_box_w = value_box_w
+    self.value_box_h = value_box_h
     self.label = label
-    self.text_inset = text_inset
     self.gravity = gravity # [x,y] gravity for SELF
     self.mn = mn
     self.mx = mx
     self.default = default
-    self.lpadding = lpadding
+    self.box_padding = box_padding
+    self.lpadding_y = lpadding_y
+    self.step = step
   def internal_dims(self) :
-    log(self, ("DIMS FOR NUMERICAL ENTRY", self.w, self.h))
-    return self.w, self.h
+    log(self, ("DIMS FOR NUMERICAL ENTRY", 0, 0))
+    return 0,0
   def dims(self) :
     ugh = self.internal_dims()
-    return ugh[0], ugh[1] + self.lpadding + TEXT_PADDING
-  def draw_box_svg(self,id) :
-    out = '<path d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:white;stroke:black;" onmousedown="(make_key_sink(\'{2}\', {3}, {4}, {5},{6}))()"/>'.format(
-      self.w,
-      self.h,
+    return ugh[0], ugh[1] + self.lpadding_y + TEXT_PADDING
+  def make_key_sink_function(self, id) :
+    out = 'make_key_sink(\'{0}\',{1},{2},{3},{4})'.format(
       id,
       self.mn,
       self.mx,
-      1, # step...
-      self.default)
-    return out
-  def draw_text_svg(self,id) :
-    out = '<text transform="translate({0},{1})"><tspan id=\'{2}\' onmousedown="(make_key_sink(\'{2}\',{3},{4},{5},{6}))()">{6}</tspan></text>'.format(
-      self.text_inset[0],
-      self.h - self.text_inset[1],
-      id,
-      self.mn,
-      self.mx,
-      1, # step...
-      self.default)
-    return out
-  def draw_label_svg(self) :
-    out = '<text transform="translate(0,{0})"><tspan>{1}</tspan></text>'.format(
-      self.internal_dims()[1] + self.lpadding,
-      self.label)
+      self.step,
+      self.default
+    )
     return out
   def export_to_svg(self) :
     id = randString()
+    fn = self.make_key_sink_function(id)
     group_open = self.open_group_svg()
-    box = self.draw_box_svg(id)
-    text = self.draw_text_svg(id)
-    label = self.draw_label_svg()
+    box = self.draw_value_box_svg(id, fn)
+    text = self.draw_value_svg(id, fn)
+    label = self.draw_label_svg(id)
     group_close = self.close_group_svg()
     return group_open + box + text + label + group_close
 
 class LayoutManager(FaustObject) :
-  def __init__(self, mom=None, o=X_AXIS, padding=10, objects=[], gravity = (CENTER, CENTER), label='foo', lpadding=TEXT_HEIGHT) :
+  def __init__(self, mom=None, o=X_AXIS, padding=10, objects=[], gravity = (CENTER, CENTER), label='foo', lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING) :
     self.mom = mom
     self.o = o
     self.padding = padding
@@ -384,10 +447,10 @@ class LayoutManager(FaustObject) :
     self.x = 0
     self.y = 0
     self.label = label
-    self.lpadding = lpadding
+    self.lpadding_y = lpadding_y
   def dims(self) :
     ugh = self.internal_dims()
-    out = (ugh[0], ugh[1] + self.lpadding + TEXT_PADDING)
+    out = (ugh[0], ugh[1] + self.lpadding_y + TEXT_PADDING)
     log(self, ("DIMS FOR LAYOUT MANAGER",)+out)
     return out
   def internal_dims(self) :
@@ -437,7 +500,7 @@ class LayoutManager(FaustObject) :
       running_count += padding + (xy(self.o, dim[X_AXIS], dim[Y_AXIS]) * ratio)
   def draw_label_svg(self) :
     out = '<text transform="translate(0,Y)"><tspan>L</tspan></text>'
-    out = out.replace('Y',str(self.internal_dims()[1] + self.lpadding))
+    out = out.replace('Y',str(self.internal_dims()[1] + self.lpadding_y))
     out = out.replace("L",str(self.label))
     return out
   def export_to_svg(self) :

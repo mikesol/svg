@@ -163,6 +163,28 @@ function moveActiveObject(e) {
   return 0;
 }
 
+function genericMovingPartUpdate(aval, pval, l, h) {
+  if (l > aval) {
+    if (pval != h) {
+      return l;
+    }
+  }
+
+  else if (aval > h) {
+    if (pval != l) {
+      return h;
+    }
+  }
+
+  // if neither of the above are true, free to move by the difference
+  else {
+    return aval;
+  }
+
+  // corner case - we avoid large leaps
+  return pval;
+}
+
 function moveActiveSlider(e)
 {
   var sliding_part = document.getElementById(_I);
@@ -184,17 +206,7 @@ function moveActiveSlider(e)
   var aval = transform[0][_A + 1] + diff;
 
   // minimum of the slider is to the bottom / left
-  if (0 > aval) {
-    transform[0][_A + 1] = 0;
-  }
-  // maximum is to the top / right
-  else if (aval > _T - (_T * _P)) {
-    transform[0][_A + 1] = _T - (_T * _P);
-  }
-  // if neither of the above are true, free to move by the difference
-  else {
-    transform[0][_A + 1] = aval;
-  }
+  transform[0][_A + 1] = genericMovingPartUpdate(aval, transform[0][_A + 1], 0, _T - (_T * _P));
   generic_label_update(unique(_I), aval, 0, _T - (_T * _P));
   var movetothis = arrayToTransform(transform);
   sliding_part.setAttribute("transform", movetothis);
@@ -221,24 +233,8 @@ function moveActiveRotatingButton(e)
   // actually, just make sure not to make things more complicated...
 
   var aval = transform[2][1] + diff;
-  // minimum of the slider is to the bottom / left
 
-  // extra if clauses avoid jerkiness from flips
-  if (_A0 > aval) {
-    if (transform[2][1] != _A0 + _SW - (_SW * _P)) {
-      transform[2][1] = _A0;
-    }
-  }
-  // maximum is to the top / right
-  else if (aval > _A0 + _SW - (_SW * _P)) {
-    if (transform[2][1] != _A0) {
-      transform[2][1] = _A0 + _SW - (_SW * _P);
-    }
-  }
-  // if neither of the above are true, free to move by the difference
-  else {
-    transform[2][1] = aval;
-  }
+  transform[2][1] = genericMovingPartUpdate(aval, transform[2][1], _A0, _A0 + _SW - (_SW * _P));
   generic_label_update(unique(_I), aval, _A0, _A0 + _SW - (_SW * _P));
   var movetothis = arrayToTransform(transform);
   sliding_part.setAttribute("transform", movetothis);
@@ -247,36 +243,17 @@ function moveActiveRotatingButton(e)
 }
 
 function generic_label_update(id, c, l, h) {
-  var label = document.getElementById("faust_label_"+id);
+  var label = document.getElementById("faust_value_"+id);
   var now = remap_and_bound(c, l, h, _MN, _MX);
-  label.textContent = _L+" :: "+now.toFixed(4);
+  label.textContent = now.toFixed(3);
 }
 
 // gets rid of the current thing being dragged
 function clearIdCache() {
-  console.log("clearing id cache");
-  // generic
+  // we only clear the id and let other variables hold cruft
+  // that means that if someone forgets to set a setter, it will
+  // point to its old value
   _I = 0;
-  _T = 0;
-  _P = 0;
-  _MN = 0;
-  _MX = 0;
-  _S = 0;
-  _L = 0;
-  // slider
-  _A = 0;
-  // rotating button
-  _A0 = 0;
-  _SW = 0;
-  _RX = 0;
-  _RY = 0;
-  _OX = 0;
-  _OY = 0;
-  // button
-  _F = 0;
-  // numerical entry
-  _N = 0;
-  _D = 0;
 }
 
 document.onmousemove = moveActiveObject;
@@ -297,7 +274,7 @@ function initiate_slide(A, I, T, P, MN, MX, S, L) {
 }
 
 function horizontal_slide(I, T, P, MN, MX, S, L) {
-  initiate_slide(X_AXIS, I, T,P,MN, MX, S, L);
+  initiate_slide(X_AXIS, I, T, P, MN, MX, S, L);
 }
 
 function vertical_slide(I, T, P, MN, MX, S, L) {
@@ -340,7 +317,7 @@ function button_down(I, F) {
 
 function change_checkbox(I) {
   clog_key_sink();
-  var box = document.getElementById(I);console.log(box.style.opacity);
+  var box = document.getElementById(I);
 
   if (box.style.opacity == 1.0) {
     box.style.opacity = 0.0;
@@ -359,6 +336,38 @@ function clog_key_sink() {
   _B = 0;
 }
 
+// if a numerical entry is linked to an incremental object,
+// actualize it
+
+function actualize_incremental_object() {
+
+  var slider_id = "faust_slider_sliding_part_"+unique(_N);
+  var rotating_button_id = "faust_rotating_button_sliding_part_"+unique(_N);
+  var val = parseFloat(_B);
+console.log(rotating_button_id);
+  var maybe_slider = document.getElementById(slider_id);
+  var maybe_button = document.getElementById(rotating_button_id);
+  if (maybe_slider != null) {
+    // ugh...code dups
+    val = remap(val, _MN, _MX, 0, _T - (_T * _P));
+    var transform = transformToArray(maybe_slider.getAttribute("transform"));
+    transform[0][_A + 1] = val;
+    var movetothis = arrayToTransform(transform);
+    maybe_slider.setAttribute("transform", movetothis);
+    return 0;
+  }
+  else if (maybe_button != null) {
+    val = remap(val, _MN, _MX, _A0, _A0 + _SW - (_SW * _P));
+    var transform = transformToArray(maybe_button.getAttribute("transform"));
+    transform[2][1] = val;
+    var movetothis = arrayToTransform(transform);
+    maybe_button.setAttribute("transform", movetothis);
+    return 0;
+  }
+  // no corresponding incremental object
+  return 0;
+}
+
 function actualize_buffer() {
   // get a valid number in there...
   if (isNaN(_B)) {
@@ -372,6 +381,7 @@ function actualize_buffer() {
   _B = ""+now;
   label.textContent = _B;
   _D = _B; // prevents bad snaps of values
+  actualize_incremental_object();
 }
 
 function buffer_backspace() {
@@ -407,13 +417,37 @@ function keys_to_sink(e) {
 
 document.onkeypress = keys_to_sink;
 document.onkeydown = make_delete_key_work;
+document.onmouseup = clearIdCache;
 
 function make_key_sink(I, MN, MX, S, D) {
-
-  _N = I;
+  _N = 'faust_value_'+I;
   _D = D;
   _MN = MN;
   _MX = MX;
   _S = S;
   _B = "";console.log(_MN, _MX);
 }
+
+function generic_slide_key_sink(A, I, T, P, MN, MX, S, D, L) {
+  initiate_slide(A, I, T, P, MN, MX, S, L);
+  make_key_sink(I, MN, MX, S, D);
+  _I = 0;
+}
+
+function horizontal_slide_key_sink(I, T, MN, MX, S, D) {
+  generic_slide_key_sink(X_AXIS, I, T, MN, MX, S, D);
+}
+
+function vertical_slide_key_sink(I, T, MN, MX, S, D) {
+  generic_slide_key_sink(Y_AXIS, I, T, MN, MX, S, D);
+}
+
+function rotating_button_key_sink(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S,D,L) {
+  rotate_button(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S,L);
+  make_key_sink(I, MN, MX, S, D);
+  _I = 0;
+}
+
+function devnull() { }
+
+var mouseUpFunction = devnull;
