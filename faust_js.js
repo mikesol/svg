@@ -18,6 +18,10 @@ var _OX = 0;
 var _OY = 0;
 // button - document me
 var _F = 0;
+// numerical entry
+var _N = 0; // id of the key sink
+var _D = 0; // default
+var _B = 0; // buffer
 
 var DEVNULL = -5000;
 
@@ -143,6 +147,8 @@ function moveActiveObject(e) {
     return true;
   }
 
+  clog_key_sink();
+
   var slider_token = "faust_slider_sliding_part";
   var rotating_button_token = "faust_rotating_button_sliding_part"
   if (_I.substring(0, slider_token.length) == slider_token) {
@@ -153,7 +159,8 @@ function moveActiveObject(e) {
     moveActiveRotatingButton(e);
     return 0;
   }
-  alert(_I+" Faust buttons not working.  Please file a bug report");
+  // soemthing like a numerical entry...so just return 0
+  return 0;
 }
 
 function moveActiveSlider(e)
@@ -247,6 +254,7 @@ function generic_label_update(id, c, l, h) {
 
 // gets rid of the current thing being dragged
 function clearIdCache() {
+  console.log("clearing id cache");
   // generic
   _I = 0;
   _T = 0;
@@ -266,10 +274,12 @@ function clearIdCache() {
   _OY = 0;
   // button
   _F = 0;
+  // numerical entry
+  _N = 0;
+  _D = 0;
 }
 
 document.onmousemove = moveActiveObject;
-document.onmouseup = clearIdCache;
 
 function initiate_slide(A, I, T, P, MN, MX, S, L) {
   // in case we haven't initialized things yet
@@ -320,13 +330,16 @@ function button_color_changer(I, F) {
 
 function button_up(I, F) {
   button_color_changer(I, F);
+  clearIdCache();
 }
 
 function button_down(I, F) {
+  clog_key_sink();
   button_color_changer(I, F);
 }
 
 function change_checkbox(I) {
+  clog_key_sink();
   var box = document.getElementById(I);console.log(box.style.opacity);
 
   if (box.style.opacity == 1.0) {
@@ -338,4 +351,69 @@ function change_checkbox(I) {
   else {
     alert("malfunctional checkbox");
   }
+}
+
+function clog_key_sink() {
+  _N = 0;
+  _D = 0;
+  _B = 0;
+}
+
+function actualize_buffer() {
+  // get a valid number in there...
+  if (isNaN(_B)) {
+    _B = ""+_D;
+  }  
+  var c = parseFloat(_B);
+  var label = document.getElementById(_N);
+  var now = bound(c, _MN, _MX);
+  console.log(c, _MN, _MX, now);
+  console.log(label);
+  _B = ""+now;
+  label.textContent = _B;
+  _D = _B; // prevents bad snaps of values
+}
+
+function buffer_backspace() {
+  if (_B.length == 0) {
+    return 0;
+  }
+  _B = _B.substring(0, _B.length - 1);
+  var label = document.getElementById(_N);
+  label.textContent = _B;
+}
+
+function make_delete_key_work(e) {
+  if (e.keyCode == 8) {
+    buffer_backspace();
+  }
+}
+
+function keys_to_sink(e) {
+  if (_N == 0) {
+    return 0;
+  }
+  if (e.keyCode == 13) {
+    actualize_buffer();
+  }
+  else {
+    var key = e.keyCode;
+    var str = String.fromCharCode(key)
+    _B += str;
+  }
+  var label = document.getElementById(_N);
+  label.textContent = _B;
+}
+
+document.onkeypress = keys_to_sink;
+document.onkeydown = make_delete_key_work;
+
+function make_key_sink(I, MN, MX, S, D) {
+
+  _N = I;
+  _D = D;
+  _MN = MN;
+  _MX = MX;
+  _S = S;
+  _B = "";console.log(_MN, _MX);
 }

@@ -3,7 +3,7 @@ from svglib import *
 import xml.dom.minidom
 from xmlutilities import *
 
-d = SVGDocument(js=gulp('faust_js.js'), css=gulp('faust_css.css'), verbose=False)
+d = SVGDocument(js=gulp('faust_js.js'), css=gulp('faust_css.css'), verbose=False, w=800, h=400)
 
 ##########################
 l0 = LayoutManager(mom=d,o=Y_AXIS)
@@ -12,7 +12,7 @@ d.lm = l0
 l1 = LayoutManager(mom=l0)
 s0 = FaustVerticalSlider(mom=l1)
 s1 = FaustHorizontalSlider(mom=l1)
-s2 = FaustVerticalSlider(mom=l1)
+s2 = FaustNumericalEntry(mom=l1)
 l1.objects = [s0,s1,s2]
 #l1.objects = [s0]
 ##########################

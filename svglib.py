@@ -17,9 +17,7 @@ TEXT_PADDING = 10
 
 class FaustObject(object) :
   def open_group_svg(self) :
-    out = '<g transform="translate(X,Y)">'
-    out = out.replace("X", str(self.x))
-    out = out.replace("Y", str(self.y))
+    out = '<g transform="translate({0},{1})">'.format(self.x, self.y)
     return out
   # code dup...
   def get_x_offset(self) :
@@ -82,36 +80,30 @@ class FaustRotatingButton(FaustObject) :
     return (min([coord[0] for coord in coords]), min([coord[0] for coord in coords]))
   def mobility_string(self, id, start_rot) :
     # ugh, in svg, rotate is weird. need to tack on 180 :(
-    out = 'transform="translate(0,0) scale(1,1) rotate(SR,RX,RY)" id="ID" onmousedown="(rotate_button(\'ID\',A0,SW,P,RX,RY,OX,OY,MN,MX,S,\'%\'))()"'
     torig = coord_sub((0,0), self.get_translation())
-    out = out.replace("SR", str(start_rot + 180))
-    out = out.replace("SW", str(self.sweep))
-    out = out.replace("P", str(self.sp))
-    out = out.replace("A0", str(self.a0 + 180))
-    out = out.replace("S", str(self.step))
-    out = out.replace("RX", str(torig[0]))
-    out = out.replace("RY", str(torig[1]))
-    out = out.replace("OX", str(self.get_x_offset()))
-    out = out.replace("OY", str(self.get_y_offset()))
-    out = out.replace("MN", str(self.mn))
-    out = out.replace("MX", str(self.mx))
-    out = out.replace("ID", str(id))
-    out = out.replace('%', str(self.label))
+    out = 'transform="translate(0,0) scale(1,1) rotate({0},{1},{2})" id="{3}" onmousedown="(rotate_button(\'{3}\',{4},{5},{6},{1},{2},{7},{8},{9},{10},{11},\'{12}\'))()" onmouseup="clearIdCache()"'.format(
+      start_rot + 180, # 0
+      torig[0], # 1
+      torig[1], # 2
+      id, # 3
+      self.a0 + 180, # 4
+      self.sweep, # 5
+      self.sp, # 6
+      self.get_x_offset(), # 7
+      self.get_y_offset(), # 8
+      self.mn, # 9
+      self.mx, # 10
+      self.step, # 11
+      self.label) # 12
     return out
   @staticmethod
   def generic_draw(origin, start, end, r, fill, stroke, instruction, small) :
-    out = '<path d="MX0 Y0LX1 Y1 AR R ONEZERO 1 X2 Y2LX0 Y0" style="fill:F;stroke:S;" & />'
-    out = out.replace("ONEZERO", '1 0' if small else '0 1')
-    out = out.replace("X0", str(origin[0]))
-    out = out.replace("Y0", str(origin[1]))
-    out = out.replace("X1", str(start[0]))
-    out = out.replace("Y1", str(start[1]))
-    out = out.replace("X2", str(end[0]))
-    out = out.replace("Y2", str(end[1]))
-    out = out.replace("R", str(r))
-    out = out.replace("F", fill)
-    out = out.replace("S", stroke)
-    out = out.replace("&", instruction)
+    out = '<path d="M{0} {1}L{2} {3} A{4} {4} {5} 1 {6} {7}L{0} {1}" style="fill:{8};stroke:{9};" {10} />'.format(
+      origin[0], origin[1],
+      start[0], start[1],
+      r, '1 0' if small else '0 1',
+      end[0], end[1],
+      fill, stroke, instruction)
     return out
   def draw_unsliding_part_svg(self) :
     # first, we need to translate the coordinate space so that the
@@ -134,11 +126,8 @@ class FaustRotatingButton(FaustObject) :
     instruction = self.mobility_string('faust_rotating_button_sliding_part_'+id, startp - half_slider_angle)
     return FaustRotatingButton.generic_draw(org, start, end, self.r, color_to_rgb(GREY), color_to_rgb(BLACK), instruction, self.sweep * self.sp < 180)
   def draw_label_svg(self, id) :
-    out = '<text transform="translate(0,Y)"><tspan id="I">L :: V</tspan></text>'
-    out = out.replace('Y',str(self.internal_dims()[1] + self.lpadding))
-    out = out.replace('V', str(self.default))
-    out = out.replace("L",str(self.label))
-    out = out.replace("I",str('faust_label_'+id))
+    out = '<text transform="translate(0,{0})"><tspan id="{1}">{2} :: {3}</tspan></text>'.format(
+      self.internal_dims()[1] + self.lpadding, 'faust_label_'+id, self.label, self.default)
     return out
   def export_to_svg(self) :
     id = randString()
@@ -180,11 +169,9 @@ class FaustSlider(FaustObject) :
     log(self, ("DIMS FOR SLIDER", x, y + self.lpadding + TEXT_PADDING))
     return x, y + self.lpadding + TEXT_PADDING
   def draw_unsliding_component_svg(self, fill, stroke) :
-    out = '<path d="M0 0LX 0LX YL0 YL0 0" style="fill:F;stroke:S;" />'
-    out = out.replace('X', str(xy(self.o, self.sa, self.wa)))
-    out = out.replace('Y', str(xy(self.o, self.wa, self.sa)))
-    out = out.replace('F', fill)
-    out = out.replace('S', stroke)
+    out = '<path d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:{2};stroke:{3};" />'.format(
+      xy(self.o, self.sa, self.wa), xy(self.o, self.wa, self.sa),
+      fill, stroke)
     return out
   def draw_unsliding_part_svg(self) :
     return self.draw_unsliding_component_svg(color_to_rgb(self.fill), color_to_rgb(BLACK))
@@ -194,31 +181,29 @@ class FaustSlider(FaustObject) :
     startp = remap(self.default, self.mn, self.mx, 0 + half_slider_girth, self.sa - half_slider_girth)
     bottom = startp - half_slider_girth
     top = startp + half_slider_girth
-    out = '<path transform="translate(TX,TY)" id="ID" d="M0 0LX 0LX YL0 YL0 0" style="fill:C;stroke:R" onmousedown="(F(\'ID\',T,P,MN,MX,S,\'%\'))()"/>'
-    out = out.replace('MN', str(self.mn))
-    out = out.replace('MX', str(self.mx))
-    out = out.replace('TX', str(xy(self.o, bottom, 0)))
-    out = out.replace('TY', str(xy(self.o, 0, bottom)))
-    out = out.replace('X', str(xy(self.o, slider_girth, self.wa)))
-    out = out.replace('Y', str(xy(self.o, self.wa, slider_girth)))
-    out = out.replace('S', str(self.step))
-    out = out.replace('C', fill)
-    out = out.replace('R', stroke)
-    out = out.replace('K', kls)
-    out = out.replace('F', xy(self.o,'horizontal_slide','vertical_slide'))
-    out = out.replace('T', str(self.sa))
-    out = out.replace('P', str(self.sp))
-    out = out.replace('ID', str(kls+'_'+id))
-    out = out.replace('%', str(self.label))
+    out = '<path transform="translate({0},{1})" id="{2}" d="M0 0L{3} 0L{3} {4}L0 {4}L0 0" style="fill:{5};stroke:{6}" onmousedown="({7}(\'{2}\',{8},{9},{10},{11},{12},\'{13}\'))()" onmouseup="clearIdCache()"/>'.format(
+      xy(self.o, bottom, 0), xy(self.o, 0, bottom),
+      kls+'_'+id,
+      xy(self.o, slider_girth, self.wa),
+      xy(self.o, self.wa, slider_girth),
+      fill, stroke,
+      # function arguments
+      xy(self.o,'horizontal_slide','vertical_slide'),
+      self.sa,
+      self.sp,
+      self.mn,
+      self.mx,
+      self.step,
+      self.label)
     return out
   def draw_sliding_part_svg(self, id) :
     return self.draw_sliding_component_svg(color_to_rgb(GREY), color_to_rgb(BLACK), 'faust_slider_sliding_part', id)
   def draw_label_svg(self, id) :
-    out = '<text transform="translate(0,Y)"><tspan id="I">L :: V</tspan></text>'
-    out = out.replace('Y',str(xy(self.o,self.wa,self.sa) + self.lpadding))
-    out = out.replace('V', str(self.default))
-    out = out.replace("L",str(self.label))
-    out = out.replace("I",str('faust_label_'+id))
+    out = '<text transform="translate(0,{0})"><tspan id="{1}">{2} :: {3}</tspan></text>'.format(
+      xy(self.o,self.wa,self.sa) + self.lpadding,
+      'faust_label_'+id,
+      self.label,
+      self.default)
     return out
   def export_to_svg(self) :
     # In svg, the width and height of text can be guessed but is often
@@ -262,22 +247,21 @@ class FaustCheckBox(FaustObject) :
     ugh = self.internal_dims()
     return ugh[0], ugh[1] + self.lpadding + TEXT_PADDING + (self.d * 0.1 / FaustCheckBox.MAGIC) # kludge for overhang of check
   def draw_box_svg(self, id) :
-    out = '<path d="M0 0LD 0LD DL0 DL0 0" style="fill:white;stroke:black;" onmousedown="(change_checkbox(\'I\'))()"/>'
-    out = out.replace('D', str(self.d))
-    out = out.replace('I', id)
+    out = '<path d="M0 0L{0} 0L{0} {0}L0 {0}L0 0" style="fill:white;stroke:black;" onmousedown="(change_checkbox(\'{1}\'))()" onmouseup="clearIdCache()"/>'.format(
+      self.d, id)
     return out
   def draw_check_svg(self,id) :
     # ugh...for now, we do disappearing based on opacity
-    out = '<path transform="scale(S,S) translate(-1.0896806, -4.3926201)" id="I" d="M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z" style="opacity:O;" fill="F" onmousedown="(change_checkbox(\'I\'))()"/>'
-    out = out.replace('F', color_to_rgb(self.fill))
-    out = out.replace('O', str(1.0 if self.default else 0.0))
-    out = out.replace('S', str(self.d * 1.0 / FaustCheckBox.MAGIC))
-    out = out.replace('I', id)
+    out = '<path transform="scale({0},{0}) translate(-1.0896806, -4.3926201)" id="{3}" d="M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z" style="opacity:{1};" fill="{2}" onmousedown="(change_checkbox(\'{3}\'))()" onmouseup="clearIdCache()"/>'.format(
+      self.d * 1.0 / FaustCheckBox.MAGIC,
+      1.0 if self.default else 0.0,
+      color_to_rgb(self.fill),
+      id)
     return out
   def draw_label_svg(self) :
-    out = '<text transform="translate(0,Y)"><tspan>L</tspan></text>'
-    out = out.replace('Y',str(self.internal_dims()[1] + self.lpadding))
-    out = out.replace("L",str(self.label))
+    out = '<text transform="translate(0,{0})"><tspan>{1}</tspan></text>'.format(
+      self.internal_dims()[1] + self.lpadding,
+      self.label)
     return out
   def export_to_svg(self) :
     # In svg, the width and height of text can be guessed but is often
@@ -308,19 +292,19 @@ class FaustButton(FaustObject) :
     log(self, ("DIMS FOR BUTTON", self.w, self.h))
     return self.w, self.h
   def draw_button_svg(self, id) :
-    out = '<path id="I" d="M0 0LX 0LX YL0 YL0 0" style="fill:U;stroke:S;" onmousedown="(button_down(\'I\',\'D\'))()" onmouseup="(button_up(\'I\',\'U\'))()"/>'
-    out = out.replace('X', str(self.w))
-    out = out.replace('Y', str(self.h))
-    out = out.replace('S', color_to_rgb(BLACK))
-    out = out.replace('D', color_to_rgb(self.fillOn))
-    out = out.replace('U', color_to_rgb(self.fillOff))
-    out = out.replace('I', id)
+    out = '<path id="{5}" d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:{2};stroke:{3};" onmousedown="(button_down(\'{5}\',\'{4}\'))()" onmouseup="(button_up(\'{5}\',\'{2}\'))()"/>'.format(
+      self.w,
+      self.h,
+      color_to_rgb(self.fillOff),
+      color_to_rgb(BLACK),
+      color_to_rgb(self.fillOn),
+      id)
     return out
   def draw_label_svg(self) :
-    out = '<text transform="translate(X,Y)" text-anchor="middle"><tspan>L</tspan></text>'
-    out = out.replace('X', str(self.w / 2.0))
-    out = out.replace('Y', str(self.h / 2.0 + self.baselineSkip))
-    out = out.replace("L",str(self.label))
+    out = '<text transform="translate({0},{1})" text-anchor="middle"><tspan>{2}</tspan></text>'.format(
+      self.w / 2.0,
+      self.h / 2.0 + self.baselineSkip,
+      self.label)
     return out
   def export_to_svg(self) :
     # In svg, the width and height of text can be guessed but is often
@@ -332,6 +316,63 @@ class FaustButton(FaustObject) :
     label = self.draw_label_svg()
     group_close = self.close_group_svg()
     return group_open + button + label + group_close
+
+class FaustNumericalEntry(FaustObject) :
+  '''
+  Uses keydowns to fill the box.
+  Heavy on Javascript.
+  '''
+  def __init__(self, mom=None, w=80, h=40, text_inset=(3,3), label='foo', gravity=(CENTER, CENTER), mn=0, mx=100, default=50, lpadding = TEXT_HEIGHT) :
+    FaustObject.__init__(self)
+    self.mom = mom
+    self.w = w
+    self.h = h
+    self.label = label
+    self.text_inset = text_inset
+    self.gravity = gravity # [x,y] gravity for SELF
+    self.mn = mn
+    self.mx = mx
+    self.default = default
+    self.lpadding = lpadding
+  def internal_dims(self) :
+    log(self, ("DIMS FOR NUMERICAL ENTRY", self.w, self.h))
+    return self.w, self.h
+  def dims(self) :
+    ugh = self.internal_dims()
+    return ugh[0], ugh[1] + self.lpadding + TEXT_PADDING
+  def draw_box_svg(self,id) :
+    out = '<path d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:white;stroke:black;" onmousedown="(make_key_sink(\'{2}\', {3}, {4}, {5},{6}))()"/>'.format(
+      self.w,
+      self.h,
+      id,
+      self.mn,
+      self.mx,
+      1, # step...
+      self.default)
+    return out
+  def draw_text_svg(self,id) :
+    out = '<text transform="translate({0},{1})"><tspan id=\'{2}\' onmousedown="(make_key_sink(\'{2}\',{3},{4},{5},{6}))()">{6}</tspan></text>'.format(
+      self.text_inset[0],
+      self.h - self.text_inset[1],
+      id,
+      self.mn,
+      self.mx,
+      1, # step...
+      self.default)
+    return out
+  def draw_label_svg(self) :
+    out = '<text transform="translate(0,{0})"><tspan>{1}</tspan></text>'.format(
+      self.internal_dims()[1] + self.lpadding,
+      self.label)
+    return out
+  def export_to_svg(self) :
+    id = randString()
+    group_open = self.open_group_svg()
+    box = self.draw_box_svg(id)
+    text = self.draw_text_svg(id)
+    label = self.draw_label_svg()
+    group_close = self.close_group_svg()
+    return group_open + box + text + label + group_close
 
 class LayoutManager(FaustObject) :
   def __init__(self, mom=None, o=X_AXIS, padding=10, objects=[], gravity = (CENTER, CENTER), label='foo', lpadding=TEXT_HEIGHT) :
