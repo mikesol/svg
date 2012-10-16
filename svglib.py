@@ -39,7 +39,6 @@ class FaustObject(object) :
     out = '</g>'
     return out
 
-#make_key_sink(\'{2}\', {3}, {4}, {5},{6})
 class FaustIncrementalObject(FaustObject) :
   def draw_value_box_svg(self, id, fn) :
     out = '<path transform="translate(0,{4})" id="faust_value_box_{2}" d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:white;stroke:black;" onmousedown="({3})()"/>'.format(
@@ -302,6 +301,85 @@ class FaustVerticalSlider(FaustSlider) :
   def __init__(self, mom=None, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H) :
     FaustSlider.__init__(self, mom=mom, o=Y_AXIS, wa=wa, sa=sa, sp=sp, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h)
 
+class FaustBarGraph(FaustIncrementalObject) :
+  '''
+  kind of a code dup with slider...
+  '''
+  def __init__(self, mom=None, o=X_AXIS, wa=40, sa=200, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H) :
+    self.mom = mom
+    self.o = o
+    self.wa = wa
+    self.sa = sa
+    self.label = label
+    self.unit = unit
+    self.default = bound(default,mn,mx)
+    self.mn = mn
+    self.mx = mx
+    self.step = step
+    self.lpadding_y = lpadding_y
+    self.box_padding = box_padding
+    self.gravity = gravity # [x,y] gravity for SELF
+    self.fill = fill
+    self.value_box_w = value_box_w
+    self.value_box_h = value_box_h
+  def internal_dims(self) :
+    x = xy(self.o, self.sa, self.wa)
+    y = xy(self.o, self.wa, self.sa)
+    return x,y
+  def dims(self) :
+    ugh = self.internal_dims()
+    # include label and value in y
+    ugh = (ugh[0], ugh[1] + (2 * self.lpadding_y) + TEXT_PADDING)
+    log(self, ("DIMS FOR BAR GRAPH",) + ugh)
+    return ugh
+  def draw_unsliding_component_svg(self, fill, stroke, id) :
+    out = '<path d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:{2};stroke:{3};" id="{4}" />'.format(
+      xy(self.o, self.sa, self.wa), xy(self.o, self.wa, self.sa),
+      fill, stroke,
+      'faust_bargraph_unsliding_part_'+id)
+    return out
+  def draw_unsliding_part_svg(self, id) :
+    return self.draw_unsliding_component_svg(color_to_rgb(self.fill), color_to_rgb(BLACK), id)
+  def draw_sliding_component_svg(self, fill, stroke, id) :
+    default = remap(self.default, self.mn, self.mx, 0, self.sa)
+    out = '<path id="{0}" d="M0 0L{1} 0L{1} {2}L0 {2}L0 0" style="fill:{3};stroke:{4}" onmousedown="({5}(\'{0}\',{6},{7},{8},{9},\'{10}\'))()" onmouseup="mouseUpFunction()"/>'.format(
+      'faust_bargraph_sliding_part_'+id,
+      xy(self.o, default, self.wa),
+      xy(self.o, self.wa, default),
+      fill, stroke,
+      # function arguments
+      xy(self.o,'horizontal_barslide','vertical_barslide'),
+      self.sa,
+      self.mn,
+      self.mx,
+      self.step,
+      self.label)
+    return out
+  # sliders don't have key sinks
+  def draw_sliding_part_svg(self, id) :
+    return self.draw_sliding_component_svg(color_to_rgb(GREY), color_to_rgb(BLACK), id)
+  def export_to_svg(self) :
+    # In svg, the width and height of text can be guessed but is often
+    # browser specific. We get around this by always adding the text
+    # after everything else so nothing else's position depends on it
+    id = randString()
+    group_open = self.open_group_svg()
+    unsliding_part = self.draw_unsliding_part_svg(id)
+    sliding_part = self.draw_sliding_part_svg(id)
+    box = self.draw_value_box_svg(id, 'devnull()')
+    value = self.draw_value_svg(id, 'devnull()')
+    label = self.draw_label_svg(id)
+    group_close = self.close_group_svg()
+    return group_open + unsliding_part + sliding_part + box + value + label + group_close
+
+class FaustHorizontalBarGraph(FaustBarGraph) :
+  def __init__(self, mom=None, wa=40, sa=200, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H) :
+    FaustBarGraph.__init__(self, mom=mom, o=X_AXIS, wa=wa, sa=sa, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h)
+
+class FaustVerticalBarGraph(FaustBarGraph) :
+  def __init__(self, mom=None, wa=40, sa=200, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H) :
+    FaustBarGraph.__init__(self, mom=mom, o=Y_AXIS, wa=wa, sa=sa, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h)
+
 class FaustCheckBox(FaustObject) :
   '''
   '''
@@ -438,11 +516,13 @@ class FaustNumericalEntry(FaustIncrementalObject) :
     return group_open + box + text + label + group_close
 
 class LayoutManager(FaustObject) :
-  def __init__(self, mom=None, o=X_AXIS, padding=10, objects=[], gravity = (CENTER, CENTER), label='foo', lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING) :
+  def __init__(self, mom=None, o=X_AXIS, padding=10, objects=None, gravity = (CENTER, CENTER), label='foo', lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING) :
     self.mom = mom
     self.o = o
     self.padding = padding
     self.objects = objects
+    if not self.objects :
+      self.objects = []
     self.gravity = gravity # [x,y] gravity for SELF
     self.x = 0
     self.y = 0

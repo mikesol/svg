@@ -21,7 +21,8 @@ s3 = FaustRotatingButton(mom=l2)
 s4 = FaustButton(mom=l2)
 #s5 = FaustVerticalSlider(mom=l2)
 s5 = FaustCheckBox(mom=l2)
-l2.objects = [s3,s4,s5]
+s6 = FaustVerticalBarGraph(mom=l2)
+l2.objects = [s3,s4,s5,s6]
 #l2.objects = [s3]
 ##########################
 l0.objects = [l1,l2]
