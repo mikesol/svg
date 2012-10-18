@@ -27,6 +27,7 @@ l2.objects = [s3,s4,s5,s6]
 ##########################
 l0.objects = [l1,l2]
 
+#print d.export_to_svg()
 doc = xml.dom.minidom.parseString(d.export_to_svg())
 dt = xml.dom.minidom.getDOMImplementation('').createDocumentType('svg', '-//W3C//DTD SVG 1.1//EN', 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd')
 doc = setDoctype(doc, dt)

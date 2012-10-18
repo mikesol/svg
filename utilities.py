@@ -15,9 +15,19 @@ CENTER = 0
 
 BLACK = (0,0,0)
 CYAN = (0,255,255)
+#CYAN = None
 GREY = (100,100,100)
 PINK = (233,150,122)
 GREEN = (173,255,47)
+KERMIT = (47,243,160)
+
+def magic_color() :
+  r = random.randint(0,255)  
+  g = random.randint(0,255)
+  b = 430 - r - g
+  v = [r,g,b]
+  random.shuffle(v)
+  return tuple(v)
 
 INF = 1e21
 
@@ -48,6 +58,8 @@ def xy(a,x,y) :
   return x if a == X_AXIS else y
 
 def color_to_rgb(rgb) :
+  if not rgb :
+    return "none"
   return "rgb"+str(rgb)
 
 def comment(foo) :
@@ -101,6 +113,9 @@ class Box(object) :
   def __init__(self) :
     self.x = (+INF,-INF)
     self.y = (+INF,-INF)
+  def add_points(self, pts) :
+    for pt in pts :
+      self.add_point(pt)
   def add_point(self, pt) :
     self.x = (min(self.x[0], pt[0]), max(self.x[1], pt[0]))
     self.y = (min(self.y[0], pt[1]), max(self.y[1], pt[1]))
@@ -108,6 +123,10 @@ class Box(object) :
     assert(self.x[1] >= self.x[0])
     assert(self.y[1] >= self.y[0])
     return self.x[1] - self.x[0], self.y[1] - self.y[0]
+  def corners(self) :
+    return (self.x[0], self.y[0]), (self.x[1], self.y[1])
+  def __str__(self) :
+    return "{0} {1}".format(self.x, self.y)
 
 def rect_to_coord(r) :
   return r.real, r.imag

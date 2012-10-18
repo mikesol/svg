@@ -231,7 +231,7 @@ class FaustSlider(FaustIncrementalObject) :
   def dims(self) :
     ugh = self.internal_dims()
     # include label and value in y
-    ugh = (ugh[0], ugh[1] + (2 * self.lpadding_y) + TEXT_PADDING)
+    ugh = (max(ugh[0], self.value_box_w), ugh[1] + (2 * self.lpadding_y) + TEXT_PADDING)
     log(self, ("DIMS FOR SLIDER",) + ugh)
     return ugh
   def draw_unsliding_component_svg(self, fill, stroke, id) :
@@ -329,7 +329,7 @@ class FaustBarGraph(FaustIncrementalObject) :
   def dims(self) :
     ugh = self.internal_dims()
     # include label and value in y
-    ugh = (ugh[0], ugh[1] + (2 * self.lpadding_y) + TEXT_PADDING)
+    ugh = (max(ugh[0], self.value_box_w), ugh[1] + (2 * self.lpadding_y) + TEXT_PADDING)
     log(self, ("DIMS FOR BAR GRAPH",) + ugh)
     return ugh
   def draw_unsliding_component_svg(self, fill, stroke, id) :
@@ -447,8 +447,13 @@ class FaustButton(FaustObject) :
     log(self, ("DIMS FOR BUTTON", self.w, self.h))
     return self.w, self.h
   def draw_button_svg(self, id) :
-    out = '<path id="{5}" d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:{2};stroke:{3};" onmousedown="(button_down(\'{5}\',\'{4}\'))()" onmouseup="(button_up(\'{5}\',\'{2}\'))()"/>'.format(
+    rf = 10
+    out = '<path id="{9}" d="M{0} 0L{1} 0C{2} 0 {2} 0 {2} {3}L{2} {4}C{2} {5} {2} {5} {1} {5}L{0} {5}C0 {5} 0 {5} 0 {4}L0 {3}C0 0 0 0 {0} 0" style="fill:{6};stroke:{7};" onmousedown="(button_down(\'{9}\',\'{8}\'))()" onmouseup="(button_up(\'{9}\',\'{6}\'))()"/>'.format(
+      rf,
+      self.w - rf,
       self.w,
+      rf,
+      self.h - rf,
       self.h,
       color_to_rgb(self.fillOff),
       color_to_rgb(BLACK),
@@ -491,8 +496,9 @@ class FaustNumericalEntry(FaustIncrementalObject) :
     self.lpadding_y = lpadding_y
     self.step = step
   def internal_dims(self) :
-    log(self, ("DIMS FOR NUMERICAL ENTRY", 0, 0))
-    return 0,0
+    dims = (self.value_box_w, self.value_box_h)
+    log(self, ("DIMS FOR NUMERICAL ENTRY",) + dims)
+    return dims
   def dims(self) :
     ugh = self.internal_dims()
     return ugh[0], ugh[1] + self.lpadding_y + TEXT_PADDING
@@ -526,12 +532,15 @@ class LayoutManager(FaustObject) :
     self.gravity = gravity # [x,y] gravity for SELF
     self.x = 0
     self.y = 0
+    self.w = 0
+    self.h = 0
     self.label = label
     self.lpadding_y = lpadding_y
+    self.box_cache = Box()
   def dims(self) :
     ugh = self.internal_dims()
     out = (ugh[0], ugh[1] + self.lpadding_y + TEXT_PADDING)
-    log(self, ("DIMS FOR LAYOUT MANAGER",)+out)
+    log(self, ("DIMS FOR LAYOUT MANAGER",)+out+(self.x, self.y))
     return out
   def internal_dims(self) :
     out = [[object.dims()[x] for object in self.objects] for x in [X_AXIS, Y_AXIS]]
@@ -541,15 +550,39 @@ class LayoutManager(FaustObject) :
     out[other_axis(self.o)] += (self.padding * 2)
     out[self.o] += (self.padding * (len(self.objects) + 1))
     return tuple(out)
-  def do_spacing(self, x, y) :
-    # we place objects in their place according to gravity
-    # we allow layout managers to fill the full space they're allotted
-    # for now, we let stuff mess up if the dims are too squished
+  def get_ratio_and_leftover(self, x, y) :
     dims = self.internal_dims()
     ratio = min(1.0 * x / dims[X_AXIS], 1.0 * y / dims[Y_AXIS])
     log(self, ("RATIO FOR LAYOUT MANAGER", ratio))
     leftover = (x - (dims[X_AXIS] * ratio), y - (dims[Y_AXIS] * ratio))
     log(self, ("LEFTOVER FOR LAYOUT MANAGER", leftover))
+    return ratio, leftover
+  def get_real_points(self) :
+    rp = []
+    for object in self.objects :
+      if isinstance(object, LayoutManager) :
+        rp += object.get_real_points()
+      else :
+        dim = object.dims()
+        x = object.get_x_offset()
+        y = object.get_y_offset()
+        rp.append((x,y))
+        rp.append((x+dim[0], y+dim[1]))
+    # we want to account for lpadding and textheight, so...
+    rp.sort(key = lambda x:x[1])
+    rp.append((rp[-1][0], rp[-1][1] + max(self.lpadding_y, self.padding)))
+    rp.append((rp[0][0], rp[0][1] - self.padding))
+    rp.sort()
+    rp.append((rp[-1][0] + self.padding, rp[-1][1]))
+    rp.append((rp[0][0] - self.padding, rp[0][1]))
+    return rp
+  def do_spacing(self, x, y) :
+    # we place objects in their place according to gravity
+    # we allow layout managers to fill the full space they're allotted
+    # for now, we let stuff mess up if the dims are too squished
+    self.w = x
+    self.h = y
+    ratio, leftover = self.get_ratio_and_leftover(x, y)
     # increase padding by size
     padding = self.padding * ratio
     # the first padding will need to account for any additional space, thus
@@ -567,29 +600,80 @@ class LayoutManager(FaustObject) :
         object.x = xy(self.o, running_count, 0)
         object.y = xy(self.o, 0, running_count)
         object.do_spacing(nx, ny)
+      elif isinstance(object, TabGroup) :
+        object.setX(xy(self.o, running_count, 0))
+        object.setY(xy(self.o, 0, running_count))
+        object.do_spacing(nx, ny)
       else :
         xv1 = xy(self.o, running_count, 0)
         xv2 = xy(self.o, running_count + (dim[X_AXIS] * (ratio - 1)), x - dim[X_AXIS])
-        log(self, ("RATIO", ratio, "X", x, "Y", y))
-        log(self, ("X1", xv1, "X2", xv2, "LC", linear_combination(object.gravity[X_AXIS], xv1, xv2)))
+        #log(self, ("RATIO", ratio, "X", x, "Y", y))
+        #log(self, ("X1", xv1, "X2", xv2, "LC", linear_combination(object.gravity[X_AXIS], xv1, xv2)))
         object.x = linear_combination(object.gravity[X_AXIS], xv1, xv2)
         yv1 = xy(self.o, 0, running_count)
         yv2 = xy(self.o, y - dim[Y_AXIS], running_count + (dim[Y_AXIS] * (ratio - 1)))
-        log(self, ("Y1", yv1, "Y2", yv2, "LC", linear_combination(object.gravity[Y_AXIS], yv1, yv2)))
+        #log(self, ("Y1", yv1, "Y2", yv2, "LC", linear_combination(object.gravity[Y_AXIS], yv1, yv2)))
         object.y = linear_combination(object.gravity[Y_AXIS], yv1, yv2)
       running_count += padding + (xy(self.o, dim[X_AXIS], dim[Y_AXIS]) * ratio)
+    # we only want to draw boxes around content
+    my_x = self.get_x_offset()
+    my_y = self.get_y_offset()
+    realpoints = [coord_sub(pt, (my_x, my_y)) for pt in self.get_real_points()]
+    for point in realpoints :
+      self.box_cache.add_point(point)
   def draw_label_svg(self) :
-    out = '<text transform="translate(0,Y)"><tspan>L</tspan></text>'
-    out = out.replace('Y',str(self.internal_dims()[1] + self.lpadding_y))
-    out = out.replace("L",str(self.label))
+    # there will be a horizontal issue with the label
+    out = '<text transform="translate({0},{1})"><tspan>{2}</tspan></text>'.format(
+      self.box_cache.x[0] + 3,
+      self.box_cache.y[1] - 3,
+      self.label)
+    return out
+  def background_svg(self) :
+    #dims = self.dims()
+    #ratio, leftover = self.get_ratio_and_leftover(self.w, self.h)
+    #padding = self.padding * ratio
+    #xshift = padding + jvalue(leftover[self.o], LEFT, self.gravity[self.o]) if self.o == X_AXIS else jvalue(self.w, LEFT, self.gravity[self.o])
+    log(self, ("DIMS FOR BACKGROUND BOX "+str(self.box_cache),))
+    out = '<path transform="translate({2},{3})" d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" fill="{4}" stroke="black"/>'.format(
+      self.box_cache.x[1] - self.box_cache.x[0],
+      self.box_cache.y[1] - self.box_cache.y[0],
+      self.box_cache.x[0],
+      self.box_cache.y[0],
+      color_to_rgb(magic_color())
+    )
     return out
   def export_to_svg(self) :
     group_open = self.open_group_svg()    
+    background = self.background_svg()
+    main = ''.join([object.export_to_svg() for object in self.objects])
+    label = self.draw_label_svg()
+    group_close = self.close_group_svg()
+    return group_open + background + main + label + group_close
+
+class TabGroup(FaustObject) :
+  def __init__(self, mom=None, headroom=40, objects=None, default = 0) :
+    self.mom = mom
+    self.objects = [] if not objects else objects
+    self.headroom = headroom
+    self.default = 0
+  def setX(self, x) :
+    self.x = x
+    for obj in self.objects :
+      obj.x = x
+  def setY(self, y) :
+    self.y = y
+    for obj in self.objects :
+      obj.y = y
+  def do_spacing(self, x, y) :
+    for obj in self.objects :
+      obj.do_spacing(x, y)
+  def export_to_svg() :
+    group_open = self.open_group_svg()
     main = ''.join([object.export_to_svg() for object in self.objects])
     label = self.draw_label_svg()
     group_close = self.close_group_svg()
     return group_open + main + label + group_close
-  
+
 class XMLDocument(object) :
   def js_open(self) :
     out = '<script type="text/javascript">'

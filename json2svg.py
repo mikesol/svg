@@ -1,3 +1,6 @@
+VERBOSE = False
+#VERBOSE = True
+
 import svglib
 from utilities import *
 import json
@@ -6,7 +9,7 @@ import sys
 import xml.dom.minidom
 from xmlutilities import *
 
-D = svglib.SVGDocument(js=gulp('faust_js.js'), css=gulp('faust_css.css'), verbose=False, w=1200, h=600)
+D = svglib.SVGDocument(js=gulp('faust_js.js'), css=gulp('faust_css.css'), verbose=VERBOSE, w=1200, h=600)
 
 JSON = json.loads(gulp(sys.argv[1]))
 # we want the UI
