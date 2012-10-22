@@ -3,7 +3,7 @@ from svglib import *
 import xml.dom.minidom
 from xmlutilities import *
 
-d = SVGDocument(js=gulp('faust_js.js'), css=gulp('faust_css.css'), verbose=False, w=1200, h=600)
+d = SVGDocument(js=gulp('faust_ui.js'), css=gulp('faust_css.css'), other=FAUST_JS, verbose=False, w=1200, h=600)
 
 ##########################
 l0 = LayoutManager(mom=d,o=Y_AXIS)

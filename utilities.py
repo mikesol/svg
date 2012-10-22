@@ -2,6 +2,11 @@ import string
 import random
 import cmath
 
+FAUST_JS = '''
+<script src='jquery-1.7.1.min.js' language='javascript'></script>
+<script src='faust_comm.js' language='javascript'></script>
+'''
+
 X_AXIS = 0
 Y_AXIS = 1
 NO_AXES = 2
