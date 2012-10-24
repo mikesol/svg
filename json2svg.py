@@ -97,7 +97,8 @@ D.lm = LM
 LM.mom = D
 
 populate_kids(LM)
-doc = xml.dom.minidom.parseString(H.export())
+#doc = xml.dom.minidom.parseString(H.export())
 #dt = '<!DOCTYPE html>'
 #doc = setDoctype(doc, dt)
-print doc.toprettyxml(indent="  ", encoding="iso-8859-1")
+#print doc.toprettyxml(indent="  ", encoding="iso-8859-1")
+print H.export()

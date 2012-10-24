@@ -120,7 +120,7 @@ class FaustRotatingButton(FaustIncrementalObject) :
   def mobility_string(self, id, start_rot) :
     # ugh, in svg, rotate is weird. need to tack on 180 :(
     torig = coord_sub((0,0), self.get_translation())
-    out = 'transform="translate(0,0) scale(1,1) rotate({0},{1},{2})" id="{3}" onmousedown="(rotate_button(\'{3}\',{4},{5},{6},{1},{2},{7},{8},{9},{10},{11},\'{12}\',\'{13}\'))()" onmouseup="mouseUpFunction()" onload="(path_to_id(\'{13}\',\'{3}\'))()"'.format(
+    out = 'transform="translate(0,0) scale(1,1) rotate({0},{1},{2})" id="{3}" onload="(initiate_rbutton(\'{3}\',{4},{5},{6},{1},{2},{7},{8},{9},{10},{11},\'{12}\',\'{13}\'))()" onmouseup="mouseUpFunction()" onmousedown="(activate_rbutton(\'{3}\'))()"'.format(
       start_rot + 180, # 0
       torig[0], # 1
       torig[1], # 2
@@ -174,23 +174,8 @@ class FaustRotatingButton(FaustIncrementalObject) :
     instruction = self.mobility_string('faust_rbutton_knob_'+id, startp - half_slider_angle)
     return FaustRotatingButton.generic_draw(org, start, end, self.r, color_to_rgb(GREY), color_to_rgb(BLACK), instruction, self.sweep * self.sp < 180)
   def make_key_sink_function(self, id) :
-    # ugh...code dup...consolodate if possible...
-    torig = coord_sub((0,0), self.get_translation())
-    out = 'rotating_button_key_sink(\'{0}\',{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},\'{12}\',\'{12}\')'.format(
-      id, # 0
-      self.a0 + 180, # 1
-      self.sweep, # 2
-      self.sp, # 3
-      torig[0], # 1
-      torig[1], # 2
-      self.get_x_offset(), # 4
-      self.get_y_offset(), # 5
-      self.mn, # 6
-      self.mx, # 7
-      self.step, # 8
-      self.default,
-      self.label,
-      self.address) # 10
+    out = 'rotating_button_key_sink(\'{0}\')'.format(
+      id)
     return out
   def export_to_svg(self) :
     id = randString()
@@ -256,35 +241,28 @@ class FaustSlider(FaustIncrementalObject) :
     startp = remap(self.default, self.mn, self.mx, 0 + half_slider_girth, self.sa - half_slider_girth)
     bottom = startp - half_slider_girth
     top = startp + half_slider_girth
-    out = '<path transform="translate({0},{1})" id="{2}" d="M0 0L{3} 0L{3} {4}L0 {4}L0 0" style="fill:{5};stroke:{6}" onmousedown="({7}(\'{2}\',{8},{9},{10},{11},{12},\'{13}\',\'{14}\'))()" onmouseup="mouseUpFunction()" onload="(path_to_id(\'{14}\',\'{2}\'))()"/>'.format(
-      xy(self.o, bottom, 0), xy(self.o, 0, bottom),
+    out = '<path transform="translate({0},{1})" id="{2}" d="M0 0L{3} 0L{3} {4}L0 {4}L0 0" style="fill:{5};stroke:{6}" onload="({7}(\'{2}\',{8},{9},{10},{11},{12},\'{13}\',\'{14}\'))()" onmouseup="mouseUpFunction()" onmousedown="({15}(\'{2}\'))()"/>'.format(
+      xy(self.o, bottom, 0),
+      xy(self.o, 0, bottom),
       xy(self.o, 'faust_hslider_knob_', 'faust_vslider_knob_')+id,
       xy(self.o, slider_girth, self.wa),
       xy(self.o, self.wa, slider_girth),
       fill, stroke,
       # function arguments
-      xy(self.o,'horizontal_slide','vertical_slide'),
+      xy(self.o,'initiate_hslider','initiate_vslider'),
       self.sa,
       self.sp,
       self.mn,
       self.mx,
       self.step,
       self.label,
-      self.address)
+      self.address,
+      xy(self.o, 'activate_hslider', 'activate_vslider'))
     return out
   def make_key_sink_function(self, id) :
-    # ugh...code dup...consolodate if possible...
-    out = '{0}_key_sink(\'{1}\',{2},{3},{4},{5},{6},{7},\'{8}\',\'{9}\')'.format(
-      xy(self.o,'horizontal_slide','vertical_slide'),
-      id, # 0
-      self.sa,
-      self.sp,
-      self.mn,
-      self.mx,
-      self.step,
-      self.default,
-      self.label,
-      self.address)
+    out = '{0}_key_sink(\'{1}\')'.format(
+      xy(self.o,'hslider','vslider'),
+      id)
     return out
   def draw_knob_svg(self, id) :
     return self.draw_sliding_component_svg(color_to_rgb(GREY), color_to_rgb(BLACK), id)
@@ -415,14 +393,14 @@ class FaustCheckBox(FaustObject) :
     ugh = self.internal_dims()
     return ugh[0], ugh[1] + self.lpadding_y + TEXT_PADDING + (self.d * 0.1 / FaustCheckBox.MAGIC) # kludge for overhang of check
   def draw_box_svg(self, id) :
-    out = '<path d="M0 0L{0} 0L{0} {0}L0 {0}L0 0" style="fill:white;stroke:black;" onmousedown="(change_checkbox(\'{1}\', \'{2}\'))()" onmouseup="mouseUpFunction()" onload="(path_to_id(\'{2}\',\'{1}\'))()"/>'.format(
+    out = '<path d="M0 0L{0} 0L{0} {0}L0 {0}L0 0" style="fill:white;stroke:black;" onmousedown="(change_checkbox(\'{1}\'))()" onmouseup="mouseUpFunction()" onload="(initiate_checkbox(\'{1}\',\'{2}\'))()"/>'.format(
       self.d,
       'faust_checkbox_box_'+id,
       self.address)
     return out
   def draw_check_svg(self,id) :
     # ugh...for now, we do disappearing based on opacity
-    out = '<path transform="scale({0},{0}) translate(-1.0896806, -4.3926201)" id="{3}" d="M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z" style="opacity:{1};" fill="{2}" onmousedown="(change_checkbox(\'{3}\', \'{4}\'))()" onmouseup="mouseUpFunction()" onload="(path_to_id(\'{4}\',\'{3}\'))()"/>'.format(
+    out = '<path transform="scale({0},{0}) translate(-1.0896806, -4.3926201)" id="{3}" d="M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z" style="opacity:{1};" fill="{2}" onmousedown="(change_checkbox(\'{3}\'))()" onmouseup="mouseUpFunction()" onload="(initiate_checkbox(\'{4}\',\'{3}\'))()"/>'.format(
       self.d * 1.0 / FaustCheckBox.MAGIC,
       1.0 if self.default else 0.0,
       color_to_rgb(self.fill),
@@ -465,7 +443,7 @@ class FaustButton(FaustObject) :
     return self.w, self.h
   def draw_button_svg(self, id) :
     rf = 10
-    out = '<path id="{9}" d="M{0} 0L{1} 0C{2} 0 {2} 0 {2} {3}L{2} {4}C{2} {5} {2} {5} {1} {5}L{0} {5}C0 {5} 0 {5} 0 {4}L0 {3}C0 0 0 0 {0} 0" style="fill:{6};stroke:{7};" onmousedown="(button_down(\'{9}\',\'{8}\',\'{10}\'))()" onmouseup="(button_up(\'{9}\',\'{6}\',\'{10}\'))()" onload="(path_to_id(\'{10}\',\'{9}\'))()"/>'.format(
+    out = '<path id="{8}" d="M{0} 0L{1} 0C{2} 0 {2} 0 {2} {3}L{2} {4}C{2} {5} {2} {5} {1} {5}L{0} {5}C0 {5} 0 {5} 0 {4}L0 {3}C0 0 0 0 {0} 0" style="fill:{6};stroke:{7};" onload="(initiate_button(\'{8}\',\'{6}\',\'{7}\',\'{9}\'))()" onmousedown="(button_down(\'{8}\'))()" onmouseup="(button_up(\'{8}\'))()"/>'.format(
       rf,
       self.w - rf,
       self.w,
@@ -473,20 +451,16 @@ class FaustButton(FaustObject) :
       self.h - rf,
       self.h,
       color_to_rgb(self.fillOff),
-      color_to_rgb(BLACK),
       color_to_rgb(self.fillOn),
       'faust_button_box_'+id,
       self.address)
     return out
   def draw_label_svg(self, id) :
-    out = '<text transform="translate({0},{1})" text-anchor="middle"><tspan onmousedown="(button_down(\'{5}\',\'{3}\',\'{6}\'))()" onmouseup="(button_up(\'{5}\',\'{4}\',\'{6}\'))()" onload="(path_to_id(\'{6}\',\'{5}\'))()">{2}</tspan></text>'.format(
+    out = '<text transform="translate({0},{1})" text-anchor="middle"><tspan onmousedown="(button_down(\'{3}\'))()" onmouseup="(button_up(\'{3}\'))()">{2}</tspan></text>'.format(
       self.w / 2.0,
       self.h / 2.0 + self.baselineSkip,
       self.label,
-      color_to_rgb(self.fillOff),
-      color_to_rgb(self.fillOn),
-      'faust_button_text_'+id,
-      self.address)
+      'faust_button_text_'+id)
     return out
   def export_to_svg(self) :
     # In svg, the width and height of text can be guessed but is often
@@ -499,8 +473,9 @@ class FaustButton(FaustObject) :
     group_close = self.close_group_svg()
     return group_open + button + label + group_close
 
+# ugh...need to work this out...
 class FaustNumericalEntry(FaustIncrementalObject) :
-  '''
+  '''	
   Uses keydowns to fill the box.
   Heavy on Javascript.
   '''

@@ -28,8 +28,26 @@ function get_id_kind(id) {
   return '';
 }
 
-function update_slider_value(id, value) {
+function update_incremental_object_value(id, value) {
   dumb_label_update(unique(id), value);
+  actualize_incremental_object(unique(id));
+}
+
+function update_hslider_value(id, value) {
+  update_incremental_object_value(id, value);
+}
+
+function update_vslider_value(id, value) {
+  update_incremental_object_value(id, value);
+}
+
+function update_rbutton_value(id, value) {
+  update_incremental_object_value(id, value);
+}
+
+function update_checkbox_value(id, value) {
+  // should work...
+  change_checkbox(id);
 }
 
 function dispatch (data) {
@@ -41,19 +59,22 @@ function dispatch (data) {
       var address = values[0];
       var value = Math.round(values[1]*10000)/10000;
       //$('[name="'+address+'"]').val(value);
-      /*
       var id = _PATHS_TO_IDS[address];
       var kind = get_id_kind(id);
-      if (kind == 'vslider') { update_vertical_slider_value (id, value); }
-      else if (kind == 'hslider') { update_horizontal_slider_value (id, value); }
+      if (kind == 'vslider') { update_vslider_value (id, value); }
+      else if (kind == 'hslider') { update_hslider_value (id, value); }
+      else if (kind == 'rbutton') { update_rbutton_value (id, value); }
+      else if (kind == 'checkbox') { update_checkbox_value (id, value); }
+      else if (kind == 'button') { /* do nothing */ }
+      /*
+      // TODO : finish stuff below
       else if (kind == 'checkbox') { update_faust_checkbox (id, value); }
       else if (kind == 'button') { update_faust_button (id, value); }
-      //else if (kind == 'faust_numerical_entry') { update_numerical_entry (id, value); }
-      else if (kind == 'faust_rbutton') { update_rotating_button_value (id, value); }
-      else if (kind == 'faust_vbargraph') { update_vertical_bar_value (id, value); }
-      else if (kind == 'faust_hbargraph)' { update_horizontal_bar_value (id, value); }
-      else { alert("Unidentified Faust Object (UFO)"); }
+      //else if (kind == 'fnentry') { update_numerical_entry (id, value); }
+      else if (kind == 'vbargraph') { update_vertical_bar_value (id, value); }
+      else if (kind == 'hbargraph)' { update_horizontal_bar_value (id, value); }
       */
+      else { console.log("Unidentified Faust Object (UFO) "+id+" "+kind); }
     }
   }
 }
