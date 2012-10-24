@@ -10,6 +10,8 @@ import xml.dom.minidom
 from xmlutilities import *
 
 D = svglib.SVGDocument(js=gulp('faust_ui.js'), css=gulp('faust_css.css'), verbose=VERBOSE, w=1200, h=600)
+H = svglib.HTMLDocument(js="/* no js */", css="/* no css */", other=FAUST_JS)
+H.nodes.append(D)
 
 JSON = json.loads(gulp(sys.argv[1]))
 # we want the UI
@@ -95,8 +97,7 @@ D.lm = LM
 LM.mom = D
 
 populate_kids(LM)
-doc = xml.dom.minidom.parseString(D.export_to_svg())
-dt = xml.dom.minidom.getDOMImplementation('').createDocumentType('svg', '-//W3C//DTD SVG 1.1//EN', 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd')
-doc = setDoctype(doc, dt)
-#xml.doctype = 'svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"'
+doc = xml.dom.minidom.parseString(H.export())
+#dt = '<!DOCTYPE html>'
+#doc = setDoctype(doc, dt)
 print doc.toprettyxml(indent="  ", encoding="iso-8859-1")

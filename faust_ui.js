@@ -1,33 +1,4 @@
 /*
- *
- * server communication
- *
- */
-
-
-// currently not functional, so commented out...
-
-/*
-function httpGet(theUrl)
-{
-  var xmlHttp = null;
-  xmlHttp = new XMLHttpRequest();
-  xmlHttp.open( "GET", theUrl, false );
-  xmlHttp.send( null );
-  return xmlHttp.responseText;
-}
-
-function fausthandler(dest, value) {
-  httpGet(dest +"?value=" + value);
-}
-
-function update (root) {
-	dispatch(data);
-	setTimeout (function () { update(root); }, 200);
-}
-*/
-
-/*
  * look for the phrase
  * UI2DSP to see where the UI sends messages to DSP
  * obviously, the goal is to separate the two as much as possible
@@ -63,17 +34,16 @@ var _B = 0; // buffer
 /*
  *
  *
- * TAB GROUP MANAGER!!!
+ * SERVER INTERACTION
  *
  *
  */
-var _TABGROUPS = Array();
 
-var DEVNULL = -5000;
+var _PATHS_TO_IDS = new Array();
 
 var prev = new Array();
-prev[X_AXIS] = DEVNULL;
-prev[Y_AXIS] = DEVNULL;
+prev[X_AXIS] = NETHERWORLD;
+prev[Y_AXIS] = NETHERWORLD;
 
 // basic utilities
 function remap(v, mn0, mx0, mn1, mx1) {
@@ -195,10 +165,14 @@ function moveActiveObject(e) {
 
   clog_key_sink();
 
-  var slider_token = "faust_slider_sliding_part";
-  var rotating_button_token = "faust_rotating_button_sliding_part"
+  var hslider_token = "faust_hslider_knob";
+  var vslider_token = "faust_vslider_knob";
+  var rotating_button_token = "faust_rbutton_knob"
   var now = null;
-  if (_I.substring(0, slider_token.length) == slider_token) {
+  if (_I.substring(0, hslider_token.length) == hslider_token) {
+    now = moveActiveSlider(e);
+  }
+  else if (_I.substring(0, vslider_token.length) == vslider_token) {
     now = moveActiveSlider(e);
   }
   else if (_I.substring(0, rotating_button_token.length) == rotating_button_token) {
@@ -300,6 +274,12 @@ function generic_label_update(id, c, l, h) {
   return now;
 }
 
+function dumb_label_update(id, c) {
+  var label = document.getElementById("faust_value_"+id);
+  label.textContent = c.toFixed(3);
+  return c;
+}
+
 // gets rid of the current thing being dragged
 function clearIdCache() {
   // we only clear the id and let other variables hold cruft
@@ -312,7 +292,7 @@ document.onmousemove = moveActiveObject;
 
 function initiate_slide(A, I, T, P, MN, MX, S, L, AD) {
   // in case we haven't initialized things yet
-  if (prev[X_AXIS] == DEVNULL) {
+  if (prev[X_AXIS] == NETHERWORLD) {
     updateXY(e);
   }
   _A = A;
@@ -335,7 +315,7 @@ function vertical_slide(I, T, P, MN, MX, S, L, AD) {
 }
 
 function rotate_button(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S,L,AD) {
-  if (prev[X_AXIS] == DEVNULL) {
+  if (prev[X_AXIS] == NETHERWORLD) {
     updateXY(e);
   }
   _I = I;
@@ -400,10 +380,14 @@ function clog_key_sink() {
 
 function actualize_incremental_object() {
 
-  var slider_id = "faust_slider_sliding_part_"+unique(_N);
-  var rotating_button_id = "faust_rotating_button_sliding_part_"+unique(_N);
+  var hslider_id = "faust_hslider_knob_"+unique(_N);
+  var vslider_id = "faust_vslider_knob_"+unique(_N);
+  var rotating_button_id = "faust_rbutton_knob_"+unique(_N);
   var val = parseFloat(_B);
-  var maybe_slider = document.getElementById(slider_id);
+  var maybe_slider = document.getElementById(hslider_id);
+  if (maybe_slider == null) {
+    maybe_slider = document.getElementById(vslider_id);
+  }
   var maybe_button = document.getElementById(rotating_button_id);
   if (maybe_slider != null) {
     // ugh...code dups
@@ -543,6 +527,10 @@ function shuffletabs(goodid, badids, x, y) {
   }
   console.log(goodid);
   generic_translate(goodid, x, y);
+}
+
+function path_to_id(path, id) {
+  _PATHS_TO_IDS[path] = id;
 }
 
 function devnull() { }

@@ -120,7 +120,7 @@ class FaustRotatingButton(FaustIncrementalObject) :
   def mobility_string(self, id, start_rot) :
     # ugh, in svg, rotate is weird. need to tack on 180 :(
     torig = coord_sub((0,0), self.get_translation())
-    out = 'transform="translate(0,0) scale(1,1) rotate({0},{1},{2})" id="{3}" onmousedown="(rotate_button(\'{3}\',{4},{5},{6},{1},{2},{7},{8},{9},{10},{11},\'{12}\',\'{13}\'))()" onmouseup="mouseUpFunction()"'.format(
+    out = 'transform="translate(0,0) scale(1,1) rotate({0},{1},{2})" id="{3}" onmousedown="(rotate_button(\'{3}\',{4},{5},{6},{1},{2},{7},{8},{9},{10},{11},\'{12}\',\'{13}\'))()" onmouseup="mouseUpFunction()" onload="(path_to_id(\'{13}\',\'{3}\'))()"'.format(
       start_rot + 180, # 0
       torig[0], # 1
       torig[1], # 2
@@ -133,8 +133,8 @@ class FaustRotatingButton(FaustIncrementalObject) :
       self.mn, # 9
       self.mx, # 10
       self.step, # 11
-      self.label,
-      self.address) # 12
+      self.label, # 12
+      self.address) # 13
     return out
   @staticmethod
   def generic_draw(origin, start, end, r, fill, stroke, instruction, small) :
@@ -145,7 +145,7 @@ class FaustRotatingButton(FaustIncrementalObject) :
       end[0], end[1],
       fill, stroke, instruction)
     return out
-  def draw_unsliding_part_svg(self, id) :
+  def draw_joint_svg(self, id) :
     # first, we need to translate the coordinate space so that the
     # left-bottom is 0,0
     trans = self.get_translation()
@@ -159,9 +159,9 @@ class FaustRotatingButton(FaustIncrementalObject) :
       self.r,
       color_to_rgb(self.fill),
       color_to_rgb(BLACK),
-      'id="{0}"'.format('faust_rotating_button_unsliding_part_'+id),
+      'id="{0}"'.format('faust_rbutton_joint_'+id),
       self.sweep < 180)
-  def draw_sliding_part_svg(self, id) :
+  def draw_joint_svg(self, id) :
     trans = self.get_translation()
     slider_angle = self.sweep * self.sp
     half_slider_angle = slider_angle * 0.5
@@ -171,7 +171,7 @@ class FaustRotatingButton(FaustIncrementalObject) :
     start = coord_sub(rect_to_coord(cmath.rect(self.r, d2r(self.a0))), trans)
     end = coord_sub(rect_to_coord(cmath.rect(self.r, d2r(self.a0 + slider_angle))), trans)
     org = coord_sub((0,0), trans)
-    instruction = self.mobility_string('faust_rotating_button_sliding_part_'+id, startp - half_slider_angle)
+    instruction = self.mobility_string('faust_rbutton_knob_'+id, startp - half_slider_angle)
     return FaustRotatingButton.generic_draw(org, start, end, self.r, color_to_rgb(GREY), color_to_rgb(BLACK), instruction, self.sweep * self.sp < 180)
   def make_key_sink_function(self, id) :
     # ugh...code dup...consolodate if possible...
@@ -196,13 +196,13 @@ class FaustRotatingButton(FaustIncrementalObject) :
     id = randString()
     fn = self.make_key_sink_function(id)
     group_open = self.open_group_svg()
-    unsliding_part = self.draw_unsliding_part_svg(id)
-    sliding_part = self.draw_sliding_part_svg(id)
+    joint = self.draw_joint_svg(id)
+    joint = self.draw_joint_svg(id)
     box = self.draw_value_box_svg(id, fn)
     value = self.draw_value_svg(id, fn)
     label = self.draw_label_svg(id)
     group_close = self.close_group_svg()
-    return group_open + unsliding_part + sliding_part + box + value + label + group_close
+    return group_open + joint + joint + box + value + label + group_close
 
 class FaustSlider(FaustIncrementalObject) :
   '''
@@ -246,9 +246,9 @@ class FaustSlider(FaustIncrementalObject) :
     out = '<path d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:{2};stroke:{3};" id="{4}" />'.format(
       xy(self.o, self.sa, self.wa), xy(self.o, self.wa, self.sa),
       fill, stroke,
-      'faust_slider_unsliding_part_'+id)
+      xy(self.o, 'faust_hslider_joint_', 'faust_vslider_joint_')+id)
     return out
-  def draw_unsliding_part_svg(self, id) :
+  def draw_joint_svg(self, id) :
     return self.draw_unsliding_component_svg(color_to_rgb(self.fill), color_to_rgb(BLACK), id)
   def draw_sliding_component_svg(self, fill, stroke, id) :
     slider_girth = self.sa  * self.sp
@@ -256,9 +256,9 @@ class FaustSlider(FaustIncrementalObject) :
     startp = remap(self.default, self.mn, self.mx, 0 + half_slider_girth, self.sa - half_slider_girth)
     bottom = startp - half_slider_girth
     top = startp + half_slider_girth
-    out = '<path transform="translate({0},{1})" id="{2}" d="M0 0L{3} 0L{3} {4}L0 {4}L0 0" style="fill:{5};stroke:{6}" onmousedown="({7}(\'{2}\',{8},{9},{10},{11},{12},\'{13}\',\'{14}\'))()" onmouseup="mouseUpFunction()"/>'.format(
+    out = '<path transform="translate({0},{1})" id="{2}" d="M0 0L{3} 0L{3} {4}L0 {4}L0 0" style="fill:{5};stroke:{6}" onmousedown="({7}(\'{2}\',{8},{9},{10},{11},{12},\'{13}\',\'{14}\'))()" onmouseup="mouseUpFunction()" onload="(path_to_id(\'{14}\',\'{2}\'))()"/>'.format(
       xy(self.o, bottom, 0), xy(self.o, 0, bottom),
-      'faust_slider_sliding_part_'+id,
+      xy(self.o, 'faust_hslider_knob_', 'faust_vslider_knob_')+id,
       xy(self.o, slider_girth, self.wa),
       xy(self.o, self.wa, slider_girth),
       fill, stroke,
@@ -286,7 +286,7 @@ class FaustSlider(FaustIncrementalObject) :
       self.label,
       self.address)
     return out
-  def draw_sliding_part_svg(self, id) :
+  def draw_knob_svg(self, id) :
     return self.draw_sliding_component_svg(color_to_rgb(GREY), color_to_rgb(BLACK), id)
   def export_to_svg(self) :
     # In svg, the width and height of text can be guessed but is often
@@ -295,13 +295,13 @@ class FaustSlider(FaustIncrementalObject) :
     id = randString()
     group_open = self.open_group_svg()
     fn = self.make_key_sink_function(id)
-    unsliding_part = self.draw_unsliding_part_svg(id)
-    sliding_part = self.draw_sliding_part_svg(id)
+    joint = self.draw_joint_svg(id)
+    knob = self.draw_knob_svg(id)
     box = self.draw_value_box_svg(id, fn)
     value = self.draw_value_svg(id, fn)
     label = self.draw_label_svg(id)
     group_close = self.close_group_svg()
-    return group_open + unsliding_part + sliding_part + box + value + label + group_close
+    return group_open + joint + knob + box + value + label + group_close
 
 class FaustHorizontalSlider(FaustSlider) :
   def __init__(self, mom=None, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address = '') :
@@ -315,7 +315,7 @@ class FaustBarGraph(FaustIncrementalObject) :
   '''
   kind of a code dup with slider...
   '''
-  def __init__(self, mom=None, o=X_AXIS, wa=40, sa=200, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H) :
+  def __init__(self, mom=None, o=X_AXIS, wa=40, sa=200, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address=None) :
     self.mom = mom
     self.o = o
     self.wa = wa
@@ -332,6 +332,7 @@ class FaustBarGraph(FaustIncrementalObject) :
     self.fill = fill
     self.value_box_w = value_box_w
     self.value_box_h = value_box_h
+    self.address = address
   def internal_dims(self) :
     x = xy(self.o, self.sa, self.wa)
     y = xy(self.o, self.wa, self.sa)
@@ -346,14 +347,14 @@ class FaustBarGraph(FaustIncrementalObject) :
     out = '<path d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:{2};stroke:{3};" id="{4}" />'.format(
       xy(self.o, self.sa, self.wa), xy(self.o, self.wa, self.sa),
       fill, stroke,
-      'faust_bargraph_unsliding_part_'+id)
+      xy(self.o, 'faust_hbargraph_joint_', 'faust_vbargraph_joint_')+id)
     return out
-  def draw_unsliding_part_svg(self, id) :
+  def draw_joint_svg(self, id) :
     return self.draw_unsliding_component_svg(color_to_rgb(self.fill), color_to_rgb(BLACK), id)
   def draw_sliding_component_svg(self, fill, stroke, id) :
     default = remap(self.default, self.mn, self.mx, 0, self.sa)
-    out = '<path id="{0}" d="M0 0L{1} 0L{1} {2}L0 {2}L0 0" style="fill:{3};stroke:{4}" onmousedown="({5}(\'{0}\',{6},{7},{8},{9},\'{10}\'))()" onmouseup="mouseUpFunction()"/>'.format(
-      'faust_bargraph_sliding_part_'+id,
+    out = '<path id="{0}" d="M0 0L{1} 0L{1} {2}L0 {2}L0 0" style="fill:{3};stroke:{4}" onmousedown="({5}(\'{0}\',{6},{7},{8},{9},\'{10}\'))()" onmouseup="mouseUpFunction()" onload="(path_to_id(\'{11}\',\'{0}\'))()"/>'.format(
+      xy(self.o, 'faust_hbargraph_joint_', 'faust_vbargraph_joint_')+id,
       xy(self.o, default, self.wa),
       xy(self.o, self.wa, default),
       fill, stroke,
@@ -363,10 +364,11 @@ class FaustBarGraph(FaustIncrementalObject) :
       self.mn,
       self.mx,
       self.step,
-      self.label)
+      self.label,
+      self.address)
     return out
   # sliders don't have key sinks
-  def draw_sliding_part_svg(self, id) :
+  def draw_joint_svg(self, id) :
     return self.draw_sliding_component_svg(color_to_rgb(GREY), color_to_rgb(BLACK), id)
   def export_to_svg(self) :
     # In svg, the width and height of text can be guessed but is often
@@ -374,13 +376,13 @@ class FaustBarGraph(FaustIncrementalObject) :
     # after everything else so nothing else's position depends on it
     id = randString()
     group_open = self.open_group_svg()
-    unsliding_part = self.draw_unsliding_part_svg(id)
-    sliding_part = self.draw_sliding_part_svg(id)
+    joint = self.draw_joint_svg(id)
+    joint = self.draw_joint_svg(id)
     box = self.draw_value_box_svg(id, 'devnull()')
     value = self.draw_value_svg(id, 'devnull()')
     label = self.draw_label_svg(id)
     group_close = self.close_group_svg()
-    return group_open + unsliding_part + sliding_part + box + value + label + group_close
+    return group_open + joint + joint + box + value + label + group_close
 
 class FaustHorizontalBarGraph(FaustBarGraph) :
   def __init__(self, mom=None, wa=40, sa=200, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H) :
@@ -413,18 +415,19 @@ class FaustCheckBox(FaustObject) :
     ugh = self.internal_dims()
     return ugh[0], ugh[1] + self.lpadding_y + TEXT_PADDING + (self.d * 0.1 / FaustCheckBox.MAGIC) # kludge for overhang of check
   def draw_box_svg(self, id) :
-    out = '<path d="M0 0L{0} 0L{0} {0}L0 {0}L0 0" style="fill:white;stroke:black;" onmousedown="(change_checkbox(\'{1}\', \'{2}\'))()" onmouseup="mouseUpFunction()"/>'.format(
+    out = '<path d="M0 0L{0} 0L{0} {0}L0 {0}L0 0" style="fill:white;stroke:black;" onmousedown="(change_checkbox(\'{1}\', \'{2}\'))()" onmouseup="mouseUpFunction()" onload="(path_to_id(\'{2}\',\'{1}\'))()"/>'.format(
       self.d,
-      id,
+      'faust_checkbox_box_'+id,
       self.address)
     return out
   def draw_check_svg(self,id) :
     # ugh...for now, we do disappearing based on opacity
-    out = '<path transform="scale({0},{0}) translate(-1.0896806, -4.3926201)" id="{3}" d="M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z" style="opacity:{1};" fill="{2}" onmousedown="(change_checkbox(\'{3}\'))()" onmouseup="mouseUpFunction()"/>'.format(
+    out = '<path transform="scale({0},{0}) translate(-1.0896806, -4.3926201)" id="{3}" d="M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z" style="opacity:{1};" fill="{2}" onmousedown="(change_checkbox(\'{3}\', \'{4}\'))()" onmouseup="mouseUpFunction()" onload="(path_to_id(\'{4}\',\'{3}\'))()"/>'.format(
       self.d * 1.0 / FaustCheckBox.MAGIC,
       1.0 if self.default else 0.0,
       color_to_rgb(self.fill),
-      id)
+      'faust_checkbox_check_'+id,
+      self.address)
     return out
   def draw_label_svg(self) :
     out = '<text transform="translate(0,{0})"><tspan>{1}</tspan></text>'.format(
@@ -462,7 +465,7 @@ class FaustButton(FaustObject) :
     return self.w, self.h
   def draw_button_svg(self, id) :
     rf = 10
-    out = '<path id="{9}" d="M{0} 0L{1} 0C{2} 0 {2} 0 {2} {3}L{2} {4}C{2} {5} {2} {5} {1} {5}L{0} {5}C0 {5} 0 {5} 0 {4}L0 {3}C0 0 0 0 {0} 0" style="fill:{6};stroke:{7};" onmousedown="(button_down(\'{9}\',\'{8}\',\'{10}\'))()" onmouseup="(button_up(\'{9}\',\'{6}\',\'{10}\'))()"/>'.format(
+    out = '<path id="{9}" d="M{0} 0L{1} 0C{2} 0 {2} 0 {2} {3}L{2} {4}C{2} {5} {2} {5} {1} {5}L{0} {5}C0 {5} 0 {5} 0 {4}L0 {3}C0 0 0 0 {0} 0" style="fill:{6};stroke:{7};" onmousedown="(button_down(\'{9}\',\'{8}\',\'{10}\'))()" onmouseup="(button_up(\'{9}\',\'{6}\',\'{10}\'))()" onload="(path_to_id(\'{10}\',\'{9}\'))()"/>'.format(
       rf,
       self.w - rf,
       self.w,
@@ -472,14 +475,18 @@ class FaustButton(FaustObject) :
       color_to_rgb(self.fillOff),
       color_to_rgb(BLACK),
       color_to_rgb(self.fillOn),
-      id,
+      'faust_button_box_'+id,
       self.address)
     return out
-  def draw_label_svg(self) :
-    out = '<text transform="translate({0},{1})" text-anchor="middle"><tspan>{2}</tspan></text>'.format(
+  def draw_label_svg(self, id) :
+    out = '<text transform="translate({0},{1})" text-anchor="middle"><tspan onmousedown="(button_down(\'{5}\',\'{3}\',\'{6}\'))()" onmouseup="(button_up(\'{5}\',\'{4}\',\'{6}\'))()" onload="(path_to_id(\'{6}\',\'{5}\'))()">{2}</tspan></text>'.format(
       self.w / 2.0,
       self.h / 2.0 + self.baselineSkip,
-      self.label)
+      self.label,
+      color_to_rgb(self.fillOff),
+      color_to_rgb(self.fillOn),
+      'faust_button_text_'+id,
+      self.address)
     return out
   def export_to_svg(self) :
     # In svg, the width and height of text can be guessed but is often
@@ -488,7 +495,7 @@ class FaustButton(FaustObject) :
     id = randString()
     group_open = self.open_group_svg()
     button = self.draw_button_svg(id)
-    label = self.draw_label_svg()
+    label = self.draw_label_svg(id)
     group_close = self.close_group_svg()
     return group_open + button + label + group_close
 
@@ -790,7 +797,7 @@ class SVGDocument(XMLDocument) :
   def svg_close(self) :
     out = '</svg>'
     return out
-  def export_to_svg(self) :
+  def export(self) :
     svg_open = self.svg_open()
     js_open = self.js_open()
     js = self.js
@@ -804,3 +811,48 @@ class SVGDocument(XMLDocument) :
     main = self.lm.export_to_svg()
     svg_close = self.svg_close()
     return svg_open+other+js_open+js+js_close+css_open+css+css_close+main+svg_close
+
+class HTMLDocument(XMLDocument) :
+  def __init__(self, js='', css='', other='', lm=None, w=1200, h=800, verbose=False) :
+    self.js = js
+    self.css = css
+    self.lm = lm
+    self.w = w
+    self.h = h
+    self.verbose = verbose
+    self.other = other # way to sneak in other stuff
+    self.nodes = []
+  def html_open(self) :
+    out = '<html>'
+    return out
+  def html_close(self) :
+    out = '</html>'
+    return out
+  def body_open(self) :
+    out = '<body>'
+    return out
+  def body_close(self) :
+    out = '</body>'
+    return out
+  def head_open(self) :
+    out = '<head>'
+    return out
+  def head_close(self) :
+    out = '</head>'
+    return out
+  def export(self) :
+    html_open = self.html_open()
+    js_open = self.js_open()
+    js = self.js
+    js_close = self.js_close()
+    css_open = self.css_open()
+    css = self.css
+    css_close = self.css_close()
+    other = self.other
+    body_open = self.body_open()
+    body_close = self.body_close()
+    head_open = self.head_open()
+    head_close = self.head_close()
+    main = ''.join([node.export() for node in self.nodes])
+    html_close = self.html_close()
+    return html_open+head_open+other+js_open+js+js_close+css_open+css+css_close+head_close+body_open+main+body_close+html_close
