@@ -374,6 +374,7 @@ function button_color_changer(I, F) {
 
 function button_up(I) {
   button_color_changer(I, _IDS_TO_ATTRIBUTES[unique(I)]["UF"]);
+  fausthandler(_IDS_TO_ATTRIBUTES[unique(I)]["AD"], 0);
   clearIdCache();
 }
 
