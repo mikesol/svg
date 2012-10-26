@@ -4,11 +4,11 @@
 // actually using a 'GET' method
 //-----------------------------------------------------------------------------
 function fausthandler(dest, value) {
-  if (0) {
+  if (1) {
     var msg = "$.get( " + dest +"?value=" + value + ");";
-    $("#trace").html(msg);
+    console.log(msg);
   }
-  else $.get("http://localhost:5510"+dest +"?value=" + value);
+  $.get("http://localhost:5510"+dest +"?value=" + value);
 }
 
 function sliderhandler(dest, value, id) {
