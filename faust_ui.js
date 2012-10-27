@@ -354,6 +354,7 @@ function initiate_rbutton(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S,L,AD) {
   _IDS_TO_ATTRIBUTES[id]["L"] = L;
   _IDS_TO_ATTRIBUTES[id]["MN"] = MN;
   _IDS_TO_ATTRIBUTES[id]["MX"] = MX;
+  _IDS_TO_ATTRIBUTES[id]["RX"] = RX;
   _IDS_TO_ATTRIBUTES[id]["RY"] = RY;
   _IDS_TO_ATTRIBUTES[id]["OX"] = OX;
   _IDS_TO_ATTRIBUTES[id]["OY"] = OY;

@@ -18,6 +18,22 @@ JSON = json.loads(gulp(sys.argv[1]))
 UI = JSON["ui"]
 assert (len(UI) == 1)
 
+def hasknob(dct) :
+  if not dct.has_key('meta') :
+    return False
+  if not dct['meta'][0].has_key('style') :
+    return False
+  return dct['meta'][0]['style'] == 'knob'
+
+def make_rbutton(dct) :
+  return svglib.FaustRotatingButton(label=dct["label"],
+             mn=float(dct["min"]),
+             mx=float(dct["max"]),
+             step=float(dct["step"]),
+             address=dct["address"],
+             default=float(dct["init"]))
+
+
 def make_hslider(dct) :
   return make_slider(svglib.FaustHorizontalSlider, dct)
 
@@ -25,6 +41,8 @@ def make_vslider(dct) :
   return make_slider(svglib.FaustVerticalSlider, dct)
 
 def make_slider(kls, dct) :
+  if hasknob(dct) :
+    return make_rbutton(dct)
   return kls(label=dct["label"],
              mn=float(dct["min"]),
              mx=float(dct["max"]),
@@ -32,11 +50,31 @@ def make_slider(kls, dct) :
              address=dct["address"],
              default=float(dct["init"]))
 
+def make_hbargraph(dct) :
+  return make_bargraph(svglib.FaustHorizontalBarGraph, dct)
+
+def make_vbargraph(dct) :
+  return make_bargraph(svglib.FaustVerticalBarGraph, dct)
+
+def make_bargraph(kls, dct) :
+  return kls(label=dct["label"],
+             mn=float(dct["min"]),
+             mx=float(dct["max"]),
+             address=dct["address"])
+
 def make_button(dct) :
   return svglib.FaustButton(label=dct["label"], address=dct["address"])
 
 def make_checkbox(dct) :
-  return svglib.FaustCheckBox(label=dct["label"], address=dct["address"], default=True if dict["init"] == "1" else False)
+  return svglib.FaustCheckBox(label=dct["label"], address=dct["address"], default=True if dct["init"] == "1" else False)
+
+def make_nentry(dct) :
+  return svglib.FaustNumericalEntry(label=dct["label"],
+             mn=float(dct["min"]),
+             mx=float(dct["max"]),
+             step=float(dct["step"]),
+             address=dct["address"],
+             default=float(dct["init"]))
 
 def make_vgroup(dct) :
   return make_group(Y_AXIS, dct)
@@ -51,16 +89,24 @@ def make_group(axis, dct) :
       lm.objects.append(make_hgroup(item))
     elif item["type"] == "vgroup" :
       lm.objects.append(make_vgroup(item))
+    elif item["type"] == "tgroup" :
+      lm.objects.append(make_tgroup(item))
     elif item["type"] == "hslider" :
       lm.objects.append(make_hslider(item))
     elif item["type"] == "vslider" :
       lm.objects.append(make_vslider(item))
+    elif item["type"] == "hbargraph" :
+      lm.objects.append(make_hbargraph(item))
+    elif item["type"] == "vbargraph" :
+      lm.objects.append(make_vbargraph(item))
     elif item["type"] == "button" :
       lm.objects.append(make_button(item))
-    elif item["type"] == "button" :
+    elif item["type"] == "checkbox" :
       lm.objects.append(make_checkbox(item))
+    elif item["type"] == "nentry" :
+      lm.objects.append(make_nentry(item))
     else :
-      "Cannot make SVG. Exiting gracefully."
+      print item["type"], "Cannot make SVG. Exiting gracefully."
       sys.exit(1)
   return lm
 
@@ -71,8 +117,10 @@ def make_tgroup(dct) :
       tg.objects.append(make_hgroup(item))
     elif item["type"] == "vgroup" :
       tg.objects.append(make_vgroup(item))
+    elif item["type"] == "tgroup" :
+      tg.objects.append(make_tgroup(item))
     else :
-      "Cannot make SVG. Exiting gracefully."
+      print item["type"], "Cannot make SVG. Exiting gracefully."
       sys.exit(1)
   return tg
 
@@ -90,7 +138,7 @@ elif UI[0]["type"] == "hgroup" :
 elif UI[0]["type"] == "tgroup" :
   LM = make_tgroup(UI[0])
 else :
-  "Cannot make SVG. Exiting gracefully."
+  print item["type"], "Cannot make SVG. Exiting gracefully."
   sys.exit(1)
 
 D.lm = LM

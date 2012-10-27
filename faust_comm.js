@@ -45,6 +45,16 @@ function update_rbutton_value(id, value) {
   update_incremental_object_value(id, value);
 }
 
+function update_nentry_value(id, value) {
+  dumb_label_update(unique(id), value);
+}
+
+function update_checkbox_value(id, value) {
+  // perhaps too much UI here?
+  var check = document.getElementById('faust_checkbox_check_'+unique(id));  
+  check.style.opacity = value;
+}
+
 function update_checkbox_value(id, value) {
   // should work...
   change_checkbox(id);
@@ -66,11 +76,9 @@ function dispatch (data) {
       else if (kind == 'rbutton') { update_rbutton_value (id, value); }
       else if (kind == 'checkbox') { update_checkbox_value (id, value); }
       else if (kind == 'button') { /* do nothing */ }
+      else if (kind == 'nentry') { update_nentry_value (id, value); }
       /*
       // TODO : finish stuff below
-      else if (kind == 'checkbox') { update_faust_checkbox (id, value); }
-      else if (kind == 'button') { update_faust_button (id, value); }
-      //else if (kind == 'fnentry') { update_numerical_entry (id, value); }
       else if (kind == 'vbargraph') { update_vertical_bar_value (id, value); }
       else if (kind == 'hbargraph)' { update_horizontal_bar_value (id, value); }
       */
@@ -80,7 +88,7 @@ function dispatch (data) {
 }
 
 function update (root) {
-  $.get( "http://localhost:5510/karplus", function(data) { dispatch( data ); } );
+  $.get( "http://localhost:5510/UITester", function(data) { dispatch( data ); } );
   setTimeout ( function () { update(root); }, 200);
 }
 $(document).ready(function() { update ($('#root').val()); });
