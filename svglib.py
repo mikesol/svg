@@ -510,10 +510,20 @@ class FaustNumericalEntry(FaustIncrementalObject) :
       self.address
     )
     return out
+  def init_fn(self, id) :
+    out = 'initiate_nentry(\'{0}\',{1},{2},{3},{4},\'{5}\')'.format(
+      id,
+      self.mn,
+      self.mx,
+      self.step,
+      self.default,
+      self.address
+    )
+    return out
   def export_to_svg(self) :
     id = randString()
     fn = self.make_key_sink_function(id)
-    group_open = self.open_group_svg()
+    group_open = self.open_group_svg(onload=self.init_fn(id))
     box = self.draw_value_box_svg(id, fn)
     text = self.draw_value_svg(id, fn)
     label = self.draw_label_svg(id)

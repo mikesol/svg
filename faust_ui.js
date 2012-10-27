@@ -313,6 +313,26 @@ function initiate_slider(A, I, T, P, MN, MX, S, L, AD) {
   path_to_id(AD, I);
 }
 
+function initiate_nentry(I, MN, MX, S, L, AD) {
+  // in case we haven't initialized things yet
+  /*
+  if (_PREV[_X_AXIS] == _NETHERWORLD) {
+    updateXY(e);
+  }
+  */
+  var id = unique(I);
+  _IDS_TO_ATTRIBUTES[id] = new Array();
+  _IDS_TO_ATTRIBUTES[id]["I"] = I;
+  _IDS_TO_ATTRIBUTES[id]["MN"] = MN;
+  _IDS_TO_ATTRIBUTES[id]["MX"] = MX;
+  _IDS_TO_ATTRIBUTES[id]["S"] = S;
+  _IDS_TO_ATTRIBUTES[id]["L"] = L;
+  _IDS_TO_ATTRIBUTES[id]["AD"] = AD;
+  path_to_id(AD, I);
+}
+
+
+
 function initiate_hslider(I, T, P, MN, MX, S, L, AD) {
   initiate_slider(_X_AXIS, I, T, P, MN, MX, S, L, AD);
 }
@@ -534,7 +554,7 @@ document.onmouseup = clearIdCache;
 
 function make_key_sink(I) {
   _N = 'faust_value_'+I;
-  _IDS_TO_ATTRIBUTES[id]["B"] = "";
+  _IDS_TO_ATTRIBUTES[I]["B"] = "";
 }
 
 function generic_key_sink(I) {
