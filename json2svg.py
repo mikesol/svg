@@ -86,25 +86,25 @@ def make_group(axis, dct) :
   lm = svglib.LayoutManager(o=axis, label=dct["label"])
   for item in dct["items"] :
     if item["type"] == "hgroup" :
-      lm.objects.append(make_hgroup(item))
+      lm.objs.append(make_hgroup(item))
     elif item["type"] == "vgroup" :
-      lm.objects.append(make_vgroup(item))
+      lm.objs.append(make_vgroup(item))
     elif item["type"] == "tgroup" :
-      lm.objects.append(make_tgroup(item))
+      lm.objs.append(make_tgroup(item))
     elif item["type"] == "hslider" :
-      lm.objects.append(make_hslider(item))
+      lm.objs.append(make_hslider(item))
     elif item["type"] == "vslider" :
-      lm.objects.append(make_vslider(item))
+      lm.objs.append(make_vslider(item))
     elif item["type"] == "hbargraph" :
-      lm.objects.append(make_hbargraph(item))
+      lm.objs.append(make_hbargraph(item))
     elif item["type"] == "vbargraph" :
-      lm.objects.append(make_vbargraph(item))
+      lm.objs.append(make_vbargraph(item))
     elif item["type"] == "button" :
-      lm.objects.append(make_button(item))
+      lm.objs.append(make_button(item))
     elif item["type"] == "checkbox" :
-      lm.objects.append(make_checkbox(item))
+      lm.objs.append(make_checkbox(item))
     elif item["type"] == "nentry" :
-      lm.objects.append(make_nentry(item))
+      lm.objs.append(make_nentry(item))
     else :
       print item["type"], "Cannot make SVG. Exiting gracefully."
       sys.exit(1)
@@ -114,21 +114,21 @@ def make_tgroup(dct) :
   tg = svglib.TabGroup()
   for item in dct["items"] :
     if item["type"] == "hgroup" :
-      tg.objects.append(make_hgroup(item))
+      tg.objs.append(make_hgroup(item))
     elif item["type"] == "vgroup" :
-      tg.objects.append(make_vgroup(item))
+      tg.objs.append(make_vgroup(item))
     elif item["type"] == "tgroup" :
-      tg.objects.append(make_tgroup(item))
+      tg.objs.append(make_tgroup(item))
     else :
       print item["type"], "Cannot make SVG. Exiting gracefully."
       sys.exit(1)
   return tg
 
-def populate_kids(o) :
-  for kid in o.objects :
-    kid.mom = o
-    if hasattr(kid, 'objects') :
-      populate_kids(kid)
+def populate_objs(o) :
+  for obj in o.objs :
+    obj.mom = o
+    if hasattr(obj, 'objs') :
+      populate_objs(obj)
 
 LM = 0
 if UI[0]["type"] == "vgroup" :
@@ -144,7 +144,7 @@ else :
 D.lm = LM
 LM.mom = D
 
-populate_kids(LM)
+populate_objs(LM)
 #doc = xml.dom.minidom.parseString(H.export())
 #dt = '<!DOCTYPE html>'
 #doc = setDoctype(doc, dt)

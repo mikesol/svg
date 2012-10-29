@@ -444,8 +444,10 @@ function initiate_checkbox(I, AD) {
 }
 
 function clog_key_sink() {
-  var box = document.getElementById("faust_value_box_"+unique(_N));
-  box.style.stroke = "black";
+  if (_N != 0) {
+    var box = document.getElementById("faust_value_box_"+unique(_N));
+    box.style.stroke = "black";
+  }
   _N = 0;  
 }
 

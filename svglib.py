@@ -531,13 +531,13 @@ class FaustNumericalEntry(FaustIncrementalObject) :
     return group_open + box + text + label + group_close
 
 class LayoutManager(FaustObject) :
-  def __init__(self, mom=None, o=X_AXIS, padding=10, objects=None, gravity = (CENTER, CENTER), label='foo', lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING) :
+  def __init__(self, mom=None, o=X_AXIS, padding=10, objs=None, gravity = (CENTER, CENTER), label='foo', lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING) :
     self.mom = mom
     self.o = o
     self.padding = padding
-    self.objects = objects
-    if not self.objects :
-      self.objects = []
+    self.objs = objs
+    if not self.objs :
+      self.objs = []
     self.gravity = gravity # [x,y] gravity for SELF
     self.x = 0
     self.y = 0
@@ -554,12 +554,12 @@ class LayoutManager(FaustObject) :
     log(self, ("DIMS FOR LAYOUT MANAGER",)+out+(self.x, self.y))
     return out
   def internal_dims(self) :
-    out = [[object.dims()[x] for object in self.objects] for x in [X_AXIS, Y_AXIS]]
+    out = [[obj.dims()[x] for obj in self.objs] for x in [X_AXIS, Y_AXIS]]
     ops = xy(self.o, [sum,max], [max,sum])
     for x in range(NO_AXES) :
       out[x] = ops[x](out[x])
     out[other_axis(self.o)] += (self.padding * 2)
-    out[self.o] += (self.padding * (len(self.objects) + 1))
+    out[self.o] += (self.padding * (len(self.objs) + 1))
     return tuple(out)
   def get_ratio_and_leftover(self, x, y) :
     dims = self.internal_dims()
@@ -570,13 +570,13 @@ class LayoutManager(FaustObject) :
     return ratio, leftover
   def get_real_points(self) :
     rp = []
-    for object in self.objects :
-      if isinstance(object, LayoutManager) :
-        rp += object.get_real_points()
+    for obj in self.objs :
+      if isinstance(obj, LayoutManager) :
+        rp += obj.get_real_points()
       else :
-        dim = object.dims()
-        x = object.get_x_offset()
-        y = object.get_y_offset()
+        dim = obj.dims()
+        x = obj.get_x_offset()
+        y = obj.get_y_offset()
         rp.append((x,y))
         rp.append((x+dim[0], y+dim[1]))
     # we want to account for padding for Y coordinates...
@@ -601,31 +601,31 @@ class LayoutManager(FaustObject) :
     # the call to jvalue with the leftover
     # use self.gravity, as object gravities will be used internally
     running_count = padding + jvalue(leftover[self.o], LEFT, self.gravity[self.o])
-    for z in range(len(self.objects)) :
-      object = self.objects[z]
-      dim = object.dims()
+    for z in range(len(self.objs)) :
+      obj = self.objs[z]
+      dim = obj.dims()
       # find dimensions
       nx = xy(self.o, dim[X_AXIS] * ratio, x)
       ny = xy(self.o, y, dim[Y_AXIS] * ratio)
-      if isinstance(object, LayoutManager) :
+      if isinstance(obj, LayoutManager) :
         # find offsets
-        object.x = xy(self.o, running_count, 0)
-        object.y = xy(self.o, 0, running_count)
-        object.do_spacing(nx, ny)
-      elif isinstance(object, TabGroup) :
-        object.setX(xy(self.o, running_count, 0))
-        object.setY(xy(self.o, 0, running_count))
-        object.do_spacing(nx, ny)
+        obj.x = xy(self.o, running_count, 0)
+        obj.y = xy(self.o, 0, running_count)
+        obj.do_spacing(nx, ny)
+      elif isinstance(obj, TabGroup) :
+        obj.setX(xy(self.o, running_count, 0))
+        obj.setY(xy(self.o, 0, running_count))
+        obj.do_spacing(nx, ny)
       else :
         xv1 = xy(self.o, running_count, 0)
         xv2 = xy(self.o, running_count + (dim[X_AXIS] * (ratio - 1)), x - dim[X_AXIS])
         #log(self, ("RATIO", ratio, "X", x, "Y", y))
-        #log(self, ("X1", xv1, "X2", xv2, "LC", linear_combination(object.gravity[X_AXIS], xv1, xv2)))
-        object.x = linear_combination(object.gravity[X_AXIS], xv1, xv2)
+        #log(self, ("X1", xv1, "X2", xv2, "LC", linear_combination(obj.gravity[X_AXIS], xv1, xv2)))
+        obj.x = linear_combination(obj.gravity[X_AXIS], xv1, xv2)
         yv1 = xy(self.o, 0, running_count)
         yv2 = xy(self.o, y - dim[Y_AXIS], running_count + (dim[Y_AXIS] * (ratio - 1)))
-        #log(self, ("Y1", yv1, "Y2", yv2, "LC", linear_combination(object.gravity[Y_AXIS], yv1, yv2)))
-        object.y = linear_combination(object.gravity[Y_AXIS], yv1, yv2)
+        #log(self, ("Y1", yv1, "Y2", yv2, "LC", linear_combination(obj.gravity[Y_AXIS], yv1, yv2)))
+        obj.y = linear_combination(obj.gravity[Y_AXIS], yv1, yv2)
       running_count += padding + (xy(self.o, dim[X_AXIS], dim[Y_AXIS]) * ratio)
     # we only want to draw boxes around content
     my_x = self.get_x_offset()
@@ -653,15 +653,15 @@ class LayoutManager(FaustObject) :
   def export_to_svg(self) :
     group_open = self.open_group_svg(id=self.id)    
     background = self.background_svg()
-    main = ''.join([object.export_to_svg() for object in self.objects])
+    main = ''.join([obj.export_to_svg() for obj in self.objs])
     label = self.draw_label_svg()
     group_close = self.close_group_svg()
     return group_open + background + main + label + group_close
 
 class TabGroup(FaustObject) :
-  def __init__(self, mom=None, headroom=40, x_padding=10, x_width=80, objects=None, default = 0, baselineSkip = 5) :
+  def __init__(self, mom=None, headroom=40, x_padding=10, x_width=80, objs=None, default = 0, baselineSkip = 5) :
     self.mom = mom
-    self.objects = [] if not objects else objects
+    self.objs = [] if not objs else objs
     self.headroom = headroom
     self.default = default
     self.x_padding = x_padding
@@ -672,22 +672,22 @@ class TabGroup(FaustObject) :
     self.id = randString()
   def setX(self, x) :
     self.x = x
-    for obj in self.objects :
+    for obj in self.objs :
       obj.x = x
   def setY(self, y) :
     self.y = y
-    for obj in self.objects :
+    for obj in self.objs :
       obj.y = y + headroom
   def dims(self) :
     x = 0
     y = 0
-    for object in self.objects :
-      dim = object.dims()
+    for obj in self.objs :
+      dim = obj.dims()
       x = max(x, dim[0])
       y = max(y, dim[1])
     return x, y + headroom
   def do_spacing(self, x, y) :
-    for obj in self.objects :
+    for obj in self.objs :
       obj.do_spacing(x, y - self.headroom)
   def draw_label_svg(self, x, y, l, goodid, badidstr) :
     out = '<text transform="translate({0},{1})" text-anchor="middle"><tspan onclick="shuffletabs(\'{3}\', \'{4}\', {5}, {6})">{2}</tspan></text>'.format(
@@ -716,21 +716,21 @@ class TabGroup(FaustObject) :
     # we evenly space buttons across x axis
     out = ''
     running_count = 0
-    for obj in self.objects :
+    for obj in self.objs :
       out += self.draw_tab_svg(
         self.x_width,
         self.headroom,
         running_count,
         0,
         obj.id,
-        '#'.join([obj2.id for obj2 in filter(lambda(x) : x != obj, self.objects)]),
+        '#'.join([obj2.id for obj2 in filter(lambda(x) : x != obj, self.objs)]),
         obj.fill)
       out += self.draw_label_svg(
         running_count + self.x_width / 2.0,
         self.headroom / 2.0 + self.baselineSkip,
         obj.label,
         obj.id,
-        '#'.join([obj2.id for obj2 in filter(lambda(x) : x != obj, self.objects)])
+        '#'.join([obj2.id for obj2 in filter(lambda(x) : x != obj, self.objs)])
       )
       running_count += self.x_width + self.x_padding
     return out
@@ -740,14 +740,14 @@ class TabGroup(FaustObject) :
     out = "cache_tab_group({0},\'{1}\',\'{2}\')".format(
       self.default,
       self.id,
-      '#'.join([object.id for object in self.objects])
+      '#'.join([obj.id for obj in self.objs])
     )
     return out
   def export_to_svg(self) :
     onclick = self.make_onclick()
     group_open = self.open_group_svg(self.id, onclick)
     tabs = self.draw_tabs_svg()
-    main = ''.join([object.export_to_svg() for object in self.objects])
+    main = ''.join([obj.export_to_svg() for obj in self.objs])
     group_close = self.close_group_svg()
     return group_open + tabs + main + group_close
 
