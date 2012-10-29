@@ -389,7 +389,7 @@ function activate_rbutton(I) {
 
 function button_color_changer(I, F) {
   // for now, this is an easier function because no dragging is involved...
-  var button = document.getElementById(I);
+  var button = document.getElementById('faust_button_box_'+unique(I));
   button.style.fill = F;
 }
 
