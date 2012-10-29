@@ -53,7 +53,7 @@ class FaustIncrementalObject(FaustObject) :
       self.internal_dims()[1] + self.box_padding)
     return out
   def draw_value_svg(self,id,fn) :
-    out = '<text transform="translate({0},{1})"><tspan id=\'faust_value_{2}\' onmousedown="({3})()">{4}</tspan></text>'.format(
+    out = '<text transform="translate({0},{1})"><tspan id=\'faust_value_value_{2}\' onmousedown="({3})()">{4}</tspan></text>'.format(
       self.box_padding,
       self.internal_dims()[1] + self.lpadding_y,
       id,

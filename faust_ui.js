@@ -276,7 +276,7 @@ function generic_label_update(id, c, l, h) {
 }
 
 function dumb_label_update(id, c) {
-  var label = document.getElementById("faust_value_"+id);
+  var label = document.getElementById("faust_value_value_"+id);
   label.textContent = c.toFixed(3);
   _IDS_TO_ATTRIBUTES[id]["B"] = c;
   return c;
@@ -444,7 +444,9 @@ function initiate_checkbox(I, AD) {
 }
 
 function clog_key_sink() {
-  _N = 0;
+  var box = document.getElementById("faust_value_box_"+unique(_N));
+  box.style.stroke = "black";
+  _N = 0;  
 }
 
 // if a numerical entry is linked to an incremental object,
@@ -553,8 +555,10 @@ document.onkeydown = make_delete_key_work;
 document.onmouseup = clearIdCache;
 
 function make_key_sink(I) {
-  _N = 'faust_value_'+I;
+  _N = 'faust_value_value_'+I;
   _IDS_TO_ATTRIBUTES[I]["B"] = "";
+  var box = document.getElementById("faust_value_box_"+I);
+  box.style.stroke = "red";
 }
 
 function generic_key_sink(I) {
