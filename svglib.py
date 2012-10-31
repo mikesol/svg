@@ -79,8 +79,7 @@ class FaustRotatingButton(FaustIncrementalObject) :
     self.mom = mom
     self.ir = ir
     self.mr = mr
-    self._r = mr
-    self.mr = mr # minimum radius
+    self._r = ir
     if sweep < 0 :
       a0 += sweep
       sweep = abs(sweep)
