@@ -620,6 +620,21 @@ _FAUST_NAMESPACE["FaustCheckBox"].prototype.make_check = function(svg, g, id) {
   )
 }
 
+_FAUST_NAMESPACE["FaustIncrementalObject"].prototype.make_label = function(svg, parent, id) {
+  var vl = svg.text(
+    parent,
+    0,
+    0,
+    this.label,
+    {
+      id: 'faust_label_'+id,
+      transform: 'translate(0,'+(this.internal_dims()[1] + this.lpadding_y)+')',
+      style: 'fill:white;stroke:black;'
+    }
+  );
+  //return vl;
+}
+
 _FAUST_NAMESPACE["FaustCheckBox"].prototype.make = function(svg, parent) {
   var id = _FAUST_NAMESPACE["randString"]();
   var g = this.make_group(svg, parent, id);
@@ -628,63 +643,6 @@ _FAUST_NAMESPACE["FaustCheckBox"].prototype.make = function(svg, parent) {
   this.make_label(svg, g, id);
   //return true;
 }
-
-class FaustCheckBox(FaustObject) :
-  '''
-  '''
-  MAGIC = 19
-  def __init__(self, mom=None, d=19, label='foo', gravity=(_FAUST_NAMESPACE["CENTER"], _FAUST_NAMESPACE["CENTER"]), fill=PINK, default=False, lpadding_y=_FAUST_NAMESPACE["TEXT_HEIGHT"], box_padding=_FAUST_NAMESPACE["TEXT_BOX_PADDING"], address='') :
-    FaustObject.__init__(self)
-    # everything in terms of 19 because that's what the scale of the check is
-    # the check is hardcoded for now in the javascript document...
-    self.mom = mom
-    self.d = d
-    self.label = label
-    self.gravity = gravity # [x,y] gravity for SELF
-    self.default = default
-    self.fill = fill
-    self.lpadding_y = lpadding_y
-    self.address = address
-  def compress(self, coef) :
-    # do nothing...we want the size of this to always be the same
-    pass
-  def internal_dims(self) :
-    log(self, ("DIMS FOR CHECKBOX", self.d, self.d))
-    return self.d, self.d
-  def dims(self) :
-    ugh = self.internal_dims()
-    return ugh[0], ugh[1] + self.lpadding_y + _FAUST_NAMESPACE["TEXT_PADDING"] + (self.d * 0.1 / FaustCheckBox.MAGIC) # kludge for overhang of check
-  def draw_box_svg(self, id) :
-    out = '<path d="M0 0L{0} 0L{0} {0}L0 {0}L0 0" style="fill:white;stroke:black;" onmousedown="(change_checkbox(\'{1}\'))()" onmouseup="mouseUpFunction()" onload="(initiate_checkbox(\'{1}\',\'{2}\'))()"/>'.format(
-      self.d,
-      'faust_checkbox_check_'+id,
-      self.address)
-    return out
-  def draw_check_svg(self,id) :
-    # ugh...for now, we do disappearing based on opacity
-    out = '<path transform="scale({0},{0}) translate(-1.0896806, -4.3926201)" id="{3}" d="M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z" style="opacity:{1};" fill="{2}" onmousedown="(change_checkbox(\'{3}\'))()" onmouseup="mouseUpFunction()" onload="(initiate_checkbox(\'{4}\',\'{3}\'))()"/>'.format(
-      self.d * 1.0 / FaustCheckBox.MAGIC,
-      1.0 if self.default else 0.0,
-      _FAUST_NAMESPACE["color_to_rgb"](self.fill),
-      'faust_checkbox_check_'+id,
-      self.address)
-    return out
-  def draw_label_svg(self) :
-    out = '<text transform="translate(0,{0})"><tspan>{1}</tspan></text>'.format(
-      self.internal_dims()[1] + self.lpadding_y,
-      self.label)
-    return out
-  def export_to_svg(self) :
-    # In svg, the width and height of text can be guessed but is often
-    # browser specific. We get around this by always adding the text
-    # after everything else so nothing else's position depends on it
-    id = randString()
-    group_open = self.open_group_svg()
-    box = self.draw_box_svg(id)
-    check = self.draw_check_svg(id)
-    label = self.draw_label_svg()
-    group_close = self.close_group_svg()
-    return group_open + box + label + check + group_close
 
 class FaustButton(FaustObject) :
   '''
