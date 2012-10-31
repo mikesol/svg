@@ -534,11 +534,12 @@ _FAUST_NAMESPACE["FaustVerticalBarGraph"] = function(options) {
 _FAUST_NAMESPACE["extend"](_FAUST_NAMESPACE["FaustBarGraph"], _FAUST_NAMESPACE["FaustVerticalBarGraph"]);
 
 _FAUST_NAMESPACE["FaustCheckBox"] = function(options) {
+  this.MAGIC = 19; // not optional...
   this.mom = options.mom || null;
   this.d = options.d || 19;
   this.label = options.label || 'foo';
   this.gravity = options.gravity || [_FAUST_NAMESPACE["CENTER"], _FAUST_NAMESPACE["CENTER"]];
-  this.fill = options.fill || _FAUST_NAMESPACE["PINK"]
+  this.fill = options.fill || _FAUST_NAMESPACE["PINK"];
   this.def = options.def || false;
   this.lpadding_y = options.lpadding_y || _FAUST_NAMESPACE["TEXT_HEIGHT"];
   this.box_padding = options.box_padding || _FAUST_NAMESPACE["TEXT_BOX_PADDING"];
@@ -546,6 +547,87 @@ _FAUST_NAMESPACE["FaustCheckBox"] = function(options) {
 }
 
 _FAUST_NAMESPACE["extend"](_FAUST_NAMESPACE["FaustObject"], _FAUST_NAMESPACE["FaustCheckBox"]);
+
+_FAUST_NAMESPACE["FaustCheckBox"].prototype.compress = function() {}
+
+_FAUST_NAMESPACE["FaustCheckBox"].prototype.internal_dims = function() {
+  return [self.d, self.d];
+}
+
+_FAUST_NAMESPACE["FaustCheckBox"].prototype.dims = function() {
+  var ugh = this.internal_dims();
+  return [ugh[0], ugh[1] + this.lpadding_y + _FAUST_NAMESPACE["TEXT_PADDING"] + (this.d * 0.1 / this.MAGIC)]
+}
+
+// DON'T FORGET TO SPECIFY CHECK IN CALLBACK
+_FAUST_NAMESPACE["FaustCheckBox"].prototype.make_box = function(svg, g, id) {
+  var full_id = 'faust_checkbox_box_'+id;
+  var w = this.d;
+  var h = this.d;
+  box = svg.path(
+    g,
+    "M0 0L"+w+" 0L"+w+" "+h+"L0 "+h+"L0 0",
+    {
+      id : full_id,
+      style : "fill:white;stroke:black;"
+    }
+  );
+
+  box.bind(
+    'load',
+    {
+      id : full_id,
+      address : this.address
+    },
+    _FAUST_NAMESPACE['initiate_checkbox']
+  );
+
+  box.bind(
+    'mousedown',
+    { id : full_id },
+    _FAUST_NAMESPACE['change_checkbox']
+  )
+}
+
+_FAUST_NAMESPACE["FaustCheckBox"].prototype.make_check = function(svg, g, id) {
+  var full_id = 'faust_checkbox_check_'+id;
+  var w = this.d;
+  var h = this.d;
+  var scale = this.d * 1.0 / this.MAGIC;
+  box = svg.path(
+    g,
+    "M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z",
+    {
+      id : full_id,
+      transform="scale("+scale+","+scale+") translate(-1.0896806, -4.3926201)",
+      style="fill:"+_FAUST_NAMESPACE["color_to_rgb"](this.fill)+";opacity:"+(this.def == 1 ? 1.0 : 0.0)+";"
+    }
+  );
+
+  box.bind(
+    'load',
+    {
+      id : full_id,
+      address : this.address
+    },
+    _FAUST_NAMESPACE['initiate_checkbox']
+  );
+
+  box.bind(
+    'mousedown',
+    { id : full_id },
+    _FAUST_NAMESPACE['change_checkbox']
+  )
+}
+
+_FAUST_NAMESPACE["FaustCheckBox"].prototype.make = function(svg, parent) {
+  var id = _FAUST_NAMESPACE["randString"]();
+  var g = this.make_group(svg, parent, id);
+  this.make_box(svg, g, id);
+  this.make_check(svg, g, id);
+  this.make_label(svg, g, id);
+  //return true;
+}
 
 class FaustCheckBox(FaustObject) :
   '''
