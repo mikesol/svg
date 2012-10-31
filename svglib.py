@@ -650,6 +650,29 @@ class FaustNumericalEntry(FaustIncrementalObject) :
       1 if incr else 0
     )
     return out
+  def draw_minus(self, id, x_offset, incr) :
+    out = '<path transform="translate({0},0)" d="M{1} {2}L{3} {2}" style="fill:grey;stroke:black;" onmousedown="activate_nentry(\'{4}\',{5})"/>'.format(
+      x_offset,
+      (self.w() / 2.0 - self.padding) / 4.0,
+      self.h() / 2.0,
+      (self.w() / 2.0 - self.padding) * 3.0 / 4.0,
+      'faust_nentry_'+('rbutton' if incr else 'lbutton')+'_'+id,
+      1 if incr else 0
+    )
+    return out
+  def draw_plus(self, id, x_offset, incr) :
+    out = '<path transform="translate({0},0)" d="M{1} {2}L{3} {2}M{4} {5}L{4} {6}" style="fill:grey;stroke:black;" onmousedown="activate_nentry(\'{7}\',{8})"/>'.format(
+      x_offset,
+      (self.w() / 2.0 - self.padding) / 4.0,
+      self.h() / 2.0 - 0.5,
+      (self.w() / 2.0 - self.padding) * 3.0 / 4.0,
+      (self.w() / 2.0 - self.padding) / 2.0,
+      self.h() / 4.0,
+      self.h() * 3.0 / 4.0,
+      'faust_nentry_'+('rbutton' if incr else 'lbutton')+'_'+id,
+      1 if incr else 0
+    )
+    return out
   def export_to_svg(self) :
     # In svg, the width and height of text can be guessed but is often
     # browser specific. We get around this by always adding the text
@@ -661,11 +684,13 @@ class FaustNumericalEntry(FaustIncrementalObject) :
     fn = self.make_key_sink_function(id)
     left_button = self.draw_left_button(id)
     right_button = self.draw_right_button(id)
+    minus = self.draw_minus(id, 0, False)
+    plus = self.draw_plus(id, self.w() / 2.0 + self.padding, True)
     box = self.draw_value_box_svg(id, fn)
     value = self.draw_value_svg(id, fn)
     label = self.draw_label_svg(id)
     group_close = self.close_group_svg()
-    return group_open + left_button + right_button + box + value + label + group_close
+    return group_open + left_button + right_button + minus + plus + box + value + label + group_close
 
 class LayoutManager(FaustObject) :
   def __init__(self, mom=None, o=X_AXIS, padding=10, objs=None, gravity = (CENTER, CENTER), label='foo', lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING) :
