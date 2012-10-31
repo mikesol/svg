@@ -313,7 +313,7 @@ function initiate_slider(A, I, T, P, MN, MX, S, L, AD) {
   path_to_id(AD, I);
 }
 
-function initiate_nentry(I, MN, MX, S, L, AD) {
+function initiate_nentry(I, MN, MX, S, D, L, AD) {
   // in case we haven't initialized things yet
   /*
   if (_PREV[_X_AXIS] == _NETHERWORLD) {
@@ -326,6 +326,7 @@ function initiate_nentry(I, MN, MX, S, L, AD) {
   _IDS_TO_ATTRIBUTES[id]["MN"] = MN;
   _IDS_TO_ATTRIBUTES[id]["MX"] = MX;
   _IDS_TO_ATTRIBUTES[id]["S"] = S;
+  _IDS_TO_ATTRIBUTES[id]["B"] = D;
   _IDS_TO_ATTRIBUTES[id]["L"] = L;
   _IDS_TO_ATTRIBUTES[id]["AD"] = AD;
   path_to_id(AD, I);
@@ -349,6 +350,30 @@ function activate_slider(I) {
   }
   */
   _I = I;
+  
+}
+
+function activate_nentry(I,dir) {
+  // in case we haven't initialized things yet
+  /*
+  if (_PREV[_X_AXIS] == _NETHERWORLD) {
+    updateXY(e);
+  }
+  */
+  _I = I;
+  var id = unique(_I);
+
+  var now = parseFloat(_IDS_TO_ATTRIBUTES[id]["B"]);
+  if (dir == 1) {
+    now += _IDS_TO_ATTRIBUTES[id]["S"];
+  }
+  else {
+    now -= _IDS_TO_ATTRIBUTES[id]["S"];
+  }
+  
+  now = bound(now, _IDS_TO_ATTRIBUTES[id]["MN"], _IDS_TO_ATTRIBUTES[id]["MX"]);
+  now = dumb_label_update(unique(_I), now);
+  return now;
 }
 
 function activate_hslider(I) {

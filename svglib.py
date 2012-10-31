@@ -480,8 +480,8 @@ class FaustButton(FaustObject) :
   def h(self) :
     return self._h
   def compress(self, coef) :
-    self._w = min(self.mw, self._w * coef)
-    self._h = min(self.mh, self._h * coef)
+    self._w = max(self.mw, self._w * coef)
+    self._h = max(self.mh, self._h * coef)
   def dims(self) :
     log(self, ("DIMS FOR BUTTON", self.w(), self.h()))
     return self.w(), self.h()
@@ -518,7 +518,7 @@ class FaustButton(FaustObject) :
     return group_open + button + label + group_close
 
 # ugh...need to work this out...
-class FaustNumericalEntry(FaustIncrementalObject) :
+class FaustOldNumericalEntry(FaustIncrementalObject) :
   '''	
   Uses keydowns to fill the box.
   Heavy on Javascript.
@@ -576,6 +576,96 @@ class FaustNumericalEntry(FaustIncrementalObject) :
     label = self.draw_label_svg(id)
     group_close = self.close_group_svg()
     return group_open + box + text + label + group_close
+
+class FaustNumericalEntry(FaustIncrementalObject) :
+  '''
+  w = width
+  h = height
+  sp = percentage of the strong axis a slider takes up
+  label = label
+  unit = unit
+  default = default value
+  '''
+  def __init__(self, mom=None, iw=VALUE_BOX_W, ih=VALUE_BOX_H, mw=VALUE_BOX_W, mh=VALUE_BOX_H, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, padding=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address = '') :
+    self.mom = mom
+    self.iw = iw
+    self.ih = ih
+    self.mw = mw
+    self.mh = mh
+    self._w = iw
+    self._h = ih
+    self.padding = padding
+    self.label = label
+    self.unit = unit
+    self.default = bound(default,mn,mx)
+    self.mn = mn
+    self.mx = mx
+    self.step = step
+    self.lpadding_y = lpadding_y
+    self.box_padding = box_padding
+    self.gravity = gravity # [x,y] gravity for SELF
+    self.fill = fill
+    self.value_box_w = value_box_w
+    self.value_box_h = value_box_h
+    self.address = address
+  def onload_function(self, id) :
+    out = 'initiate_nentry(\'{0}\',{1},{2},{3},{4},\'{5}\',\'{6}\')'.format(
+      id, # 0
+      self.mn, # 1
+      self.mx, # 2
+      self.step, # 3
+      self.default, # 4
+      self.label, # 5
+      self.address) # 6
+    return out
+  def compress(self, coef) :
+    self._w = max(self.mw, self._w * coef)
+    self._h = max(self.mh, self._h * coef)
+  def w(self) :
+    return self._w
+  def h(self) :
+    return self._h
+  def internal_dims(self) :
+    return self.w(), self.h()
+  def dims(self) :
+    ugh = self.internal_dims()
+    # include label and value in y
+    ugh = (max(ugh[0], self.value_box_w), ugh[1] + (2 * self.lpadding_y) + TEXT_PADDING)
+    log(self, ("DIMS FOR SLIDER",) + ugh)
+    return ugh
+  def make_key_sink_function(self, id) :
+    out = 'nentry_key_sink(\'{0}\')'.format(
+      id)
+    return out
+  def draw_left_button(self, id) :
+    return self.draw_button(id, 0, False)
+  def draw_right_button(self, id) :
+    return self.draw_button(id, self.w() / 2.0 + self.padding, True)
+  def draw_button(self, id, x_offset, incr) :
+    out = '<path transform="translate({0},0)" d="M0 0L0 {2}L{1} {2}L{1} 0L0 0" id="{3}" style="fill:grey;stroke:black;" onmousedown="activate_nentry(\'{3}\',{4})"/>'.format(
+      x_offset,
+      self.w() / 2.0 - self.padding,
+      self.h(),
+      'faust_nentry_'+('rbutton' if incr else 'lbutton')+'_'+id,
+      1 if incr else 0
+    )
+    return out
+  def export_to_svg(self) :
+    # In svg, the width and height of text can be guessed but is often
+    # browser specific. We get around this by always adding the text
+    # after everything else so nothing else's position depends on it
+    id = randString()
+    #onload = 'devnull()'
+    onload = self.onload_function(id)
+    group_open = self.open_group_svg(onload=onload)
+    fn = self.make_key_sink_function(id)
+    left_button = self.draw_left_button(id)
+    right_button = self.draw_right_button(id)
+    box = self.draw_value_box_svg(id, fn)
+    value = self.draw_value_svg(id, fn)
+    label = self.draw_label_svg(id)
+    group_close = self.close_group_svg()
+    return group_open + left_button + right_button + box + value + label + group_close
 
 class LayoutManager(FaustObject) :
   def __init__(self, mom=None, o=X_AXIS, padding=10, objs=None, gravity = (CENTER, CENTER), label='foo', lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING) :
