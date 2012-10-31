@@ -517,66 +517,6 @@ class FaustButton(FaustObject) :
     group_close = self.close_group_svg()
     return group_open + button + label + group_close
 
-# ugh...need to work this out...
-class FaustOldNumericalEntry(FaustIncrementalObject) :
-  '''	
-  Uses keydowns to fill the box.
-  Heavy on Javascript.
-  '''
-  def __init__(self, mom=None, label='foo', gravity=(CENTER, CENTER), mn=0, mx=100, default=50, step=1, lpadding_y = TEXT_HEIGHT, box_padding = TEXT_BOX_PADDING, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address='') :
-    FaustObject.__init__(self)
-    self.mom = mom
-    self.value_box_w = value_box_w
-    self.value_box_h = value_box_h
-    self.label = label
-    self.gravity = gravity # [x,y] gravity for SELF
-    self.mn = mn
-    self.mx = mx
-    self.default = default
-    self.box_padding = box_padding
-    self.lpadding_y = lpadding_y
-    self.step = step
-    self.address = address
-  def compress(self, coef) :
-    # do nothing...we want the size of this to always be the same
-    pass
-  def internal_dims(self) :
-    dims = (self.value_box_w, self.value_box_h)
-    log(self, ("DIMS FOR NUMERICAL ENTRY",) + dims)
-    return dims
-  def dims(self) :
-    ugh = self.internal_dims()
-    return ugh[0], ugh[1] + self.lpadding_y + TEXT_PADDING
-  def make_key_sink_function(self, id) :
-    out = 'make_key_sink(\'{0}\',{1},{2},{3},{4},\'{5}\')'.format(
-      id,
-      self.mn,
-      self.mx,
-      self.step,
-      self.default,
-      self.address
-    )
-    return out
-  def init_fn(self, id) :
-    out = 'initiate_nentry(\'{0}\',{1},{2},{3},{4},\'{5}\')'.format(
-      id,
-      self.mn,
-      self.mx,
-      self.step,
-      self.default,
-      self.address
-    )
-    return out
-  def export_to_svg(self) :
-    id = randString()
-    fn = self.make_key_sink_function(id)
-    group_open = self.open_group_svg(onload=self.init_fn(id))
-    box = self.draw_value_box_svg(id, fn)
-    text = self.draw_value_svg(id, fn)
-    label = self.draw_label_svg(id)
-    group_close = self.close_group_svg()
-    return group_open + box + text + label + group_close
-
 class FaustNumericalEntry(FaustIncrementalObject) :
   '''
   w = width
