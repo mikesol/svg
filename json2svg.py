@@ -69,6 +69,8 @@ def make_checkbox(dct) :
   return svglib.FaustCheckBox(label=dct["label"], address=dct["address"], default=True if dct["init"] == "1" else False)
 
 def make_nentry(dct) :
+  if hasknob(dct) :
+    return make_rbutton(dct)
   return svglib.FaustNumericalEntry(label=dct["label"],
              mn=float(dct["min"]),
              mx=float(dct["max"]),
