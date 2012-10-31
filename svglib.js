@@ -533,6 +533,20 @@ _FAUST_NAMESPACE["FaustVerticalBarGraph"] = function(options) {
 
 _FAUST_NAMESPACE["extend"](_FAUST_NAMESPACE["FaustBarGraph"], _FAUST_NAMESPACE["FaustVerticalBarGraph"]);
 
+_FAUST_NAMESPACE["FaustCheckBox"] = function(options) {
+  this.mom = options.mom || null;
+  this.d = options.d || 19;
+  this.label = options.label || 'foo';
+  this.gravity = options.gravity || [_FAUST_NAMESPACE["CENTER"], _FAUST_NAMESPACE["CENTER"]];
+  this.fill = options.fill || _FAUST_NAMESPACE["PINK"]
+  this.def = options.def || false;
+  this.lpadding_y = options.lpadding_y || _FAUST_NAMESPACE["TEXT_HEIGHT"];
+  this.box_padding = options.box_padding || _FAUST_NAMESPACE["TEXT_BOX_PADDING"];
+  this.address = options.address || '';
+}
+
+_FAUST_NAMESPACE["extend"](_FAUST_NAMESPACE["FaustObject"], _FAUST_NAMESPACE["FaustCheckBox"]);
+
 class FaustCheckBox(FaustObject) :
   '''
   '''
