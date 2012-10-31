@@ -116,6 +116,8 @@ def find_all_90s(a0, sweep) :
 
 class Box(object) :
   def __init__(self) :
+    self.clear()
+  def clear(self) :
     self.x = (+INF,-INF)
     self.y = (+INF,-INF)
   def add_points(self, pts) :

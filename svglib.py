@@ -7,9 +7,8 @@ the goal is to find the minimum number of elemetns that can articulate our needs
 - path for lines and bezier curves
 - arc for circles and parts of circles
 
-
-All value readers could potentially be activated from the javascript.
-Those that are passive just have a passive flag set.
+Spacing is a multiple pass system that starts from default values and
+reduces until certain minimum spacing values are hit
 '''
 
 from utilities import *
@@ -42,6 +41,9 @@ class FaustObject(object) :
   def close_group_svg(self) :
     out = '</g>'
     return out
+  def compress(self, coef) :
+    # should override for all methods, but just in case...
+    pass
 
 class FaustIncrementalObject(FaustObject) :
   def draw_value_box_svg(self, id, fn) :
@@ -73,9 +75,12 @@ class FaustRotatingButton(FaustIncrementalObject) :
   a0 = initial angle
   sweep = number of degrees :: ALWAYS POSITIVE
   '''
-  def __init__(self, mom=None, r=50, a0=180, sweep=180, sp=0.1, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address = '') :
+  def __init__(self, mom=None, ir=50, mr=25, a0=180, sweep=180, sp=0.1, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address = '') :
     self.mom = mom
-    self.r = r
+    self.ir = ir
+    self.mr = mr
+    self._r = mr
+    self.mr = mr # minimum radius
     if sweep < 0 :
       a0 += sweep
       sweep = abs(sweep)
@@ -98,9 +103,13 @@ class FaustRotatingButton(FaustIncrementalObject) :
     self.value_box_w = value_box_w
     self.value_box_h = value_box_h
     self.address = address
+  def compress(self, coef) :
+    self._r = max(self.mr, self._r * coef)
+  def r(self) :
+    return self._r
   def get_maybe_extremal_coords(self) :
     angles = sorted(list(set(find_all_90s(self.a0, self.sweep) + [self.a0, self.a0 + self.sweep])))
-    return [rect_to_coord(cmath.rect(*polar)) for polar in [(self.r, d2r(angle)) for angle in angles]]+[(0,0)]
+    return [rect_to_coord(cmath.rect(*polar)) for polar in [(self.r(), d2r(angle)) for angle in angles]]+[(0,0)]
   def internal_dims(self) :
     # sorted not necessary, but why not...
     coords = self.get_maybe_extremal_coords()
@@ -149,14 +158,14 @@ class FaustRotatingButton(FaustIncrementalObject) :
     # first, we need to translate the coordinate space so that the
     # left-bottom is 0,0
     trans = self.get_translation()
-    start = coord_sub(rect_to_coord(cmath.rect(self.r, d2r(self.a0))), trans)
-    end = coord_sub(rect_to_coord(cmath.rect(self.r, d2r(self.a0 + self.sweep))), trans)
+    start = coord_sub(rect_to_coord(cmath.rect(self.r(), d2r(self.a0))), trans)
+    end = coord_sub(rect_to_coord(cmath.rect(self.r(), d2r(self.a0 + self.sweep))), trans)
     org = coord_sub((0,0), trans)
     return FaustRotatingButton.generic_draw(
       org,
       start,
       end,
-      self.r,
+      self.r(),
       color_to_rgb(self.fill),
       color_to_rgb(BLACK),
       'id="{0}"'.format('faust_rbutton_joint_'+id),
@@ -166,13 +175,13 @@ class FaustRotatingButton(FaustIncrementalObject) :
     slider_angle = self.sweep * self.sp
     half_slider_angle = slider_angle * 0.5
     startp = remap(self.default, self.mn, self.mx, self.a0 + half_slider_angle, self.a0 + self.sweep - half_slider_angle)
-    #start = coord_sub(rect_to_coord(cmath.rect(self.r, d2r(startp - half_slider_angle))), trans)
-    #end = coord_sub(rect_to_coord(cmath.rect(self.r, d2r(startp + half_slider_angle))), trans)
-    start = coord_sub(rect_to_coord(cmath.rect(self.r, d2r(self.a0))), trans)
-    end = coord_sub(rect_to_coord(cmath.rect(self.r, d2r(self.a0 + slider_angle))), trans)
+    #start = coord_sub(rect_to_coord(cmath.rect(self.r(), d2r(startp - half_slider_angle))), trans)
+    #end = coord_sub(rect_to_coord(cmath.rect(self.r(), d2r(startp + half_slider_angle))), trans)
+    start = coord_sub(rect_to_coord(cmath.rect(self.r(), d2r(self.a0))), trans)
+    end = coord_sub(rect_to_coord(cmath.rect(self.r(), d2r(self.a0 + slider_angle))), trans)
     org = coord_sub((0,0), trans)
     instruction = self.mobility_string('faust_rbutton_knob_'+id, startp - half_slider_angle)
-    return FaustRotatingButton.generic_draw(org, start, end, self.r, color_to_rgb(GREY), color_to_rgb(BLACK), instruction, self.sweep * self.sp < 180)
+    return FaustRotatingButton.generic_draw(org, start, end, self.r(), color_to_rgb(GREY), color_to_rgb(BLACK), instruction, self.sweep * self.sp < 180)
   def make_key_sink_function(self, id) :
     out = 'rotating_button_key_sink(\'{0}\')'.format(
       id)
@@ -198,11 +207,15 @@ class FaustSlider(FaustIncrementalObject) :
   unit = unit
   default = default value
   '''
-  def __init__(self, mom=None, o=X_AXIS, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address = '') :
+  def __init__(self, mom=None, o=X_AXIS, iwa=40, isa=200, mwa=20, msa=100, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address = '') :
     self.mom = mom
     self.o = o
-    self.wa = wa
-    self.sa = sa
+    self.iwa = iwa
+    self.isa = isa
+    self.mwa = mwa
+    self.msa = msa
+    self._sa = isa
+    self._wa = iwa
     self.sp = sp
     self.label = label
     self.unit = unit
@@ -217,9 +230,16 @@ class FaustSlider(FaustIncrementalObject) :
     self.value_box_w = value_box_w
     self.value_box_h = value_box_h
     self.address = address
+  def compress(self, coef) :
+    self._wa = max(self.mwa, self._wa * coef)
+    self._sa = max(self.msa, self._sa * coef)
+  def wa(self) :
+    return self._wa
+  def sa(self) :
+    return self._sa
   def internal_dims(self) :
-    x = xy(self.o, self.sa, self.wa)
-    y = xy(self.o, self.wa, self.sa)
+    x = xy(self.o, self.sa(), self.wa())
+    y = xy(self.o, self.wa(), self.sa())
     return x,y
   def dims(self) :
     ugh = self.internal_dims()
@@ -229,28 +249,28 @@ class FaustSlider(FaustIncrementalObject) :
     return ugh
   def draw_unsliding_component_svg(self, fill, stroke, id) :
     out = '<path d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:{2};stroke:{3};" id="{4}" />'.format(
-      xy(self.o, self.sa, self.wa), xy(self.o, self.wa, self.sa),
+      xy(self.o, self.sa(), self.wa()), xy(self.o, self.wa(), self.sa()),
       fill, stroke,
       xy(self.o, 'faust_hslider_joint_', 'faust_vslider_joint_')+id)
     return out
   def draw_joint_svg(self, id) :
     return self.draw_unsliding_component_svg(color_to_rgb(self.fill), color_to_rgb(BLACK), id)
   def draw_sliding_component_svg(self, fill, stroke, id) :
-    slider_girth = self.sa  * self.sp
+    slider_girth = self.sa()  * self.sp
     half_slider_girth = slider_girth * 0.5
-    startp = remap(self.default, self.mn, self.mx, 0 + half_slider_girth, self.sa - half_slider_girth)
+    startp = remap(self.default, self.mn, self.mx, 0 + half_slider_girth, self.sa() - half_slider_girth)
     bottom = startp - half_slider_girth
     top = startp + half_slider_girth
     out = '<path transform="translate({0},{1})" id="{2}" d="M0 0L{3} 0L{3} {4}L0 {4}L0 0" style="fill:{5};stroke:{6}" onload="({7}(\'{2}\',{8},{9},{10},{11},{12},\'{13}\',\'{14}\'))()" onmouseup="mouseUpFunction()" onmousedown="({15}(\'{2}\'))()"/>'.format(
       xy(self.o, bottom, 0),
       xy(self.o, 0, bottom),
       xy(self.o, 'faust_hslider_knob_', 'faust_vslider_knob_')+id,
-      xy(self.o, slider_girth, self.wa),
-      xy(self.o, self.wa, slider_girth),
+      xy(self.o, slider_girth, self.wa()),
+      xy(self.o, self.wa(), slider_girth),
       fill, stroke,
       # function arguments
       xy(self.o,'initiate_hslider','initiate_vslider'),
-      self.sa,
+      self.sa(),
       self.sp,
       self.mn,
       self.mx,
@@ -282,22 +302,26 @@ class FaustSlider(FaustIncrementalObject) :
     return group_open + joint + knob + box + value + label + group_close
 
 class FaustHorizontalSlider(FaustSlider) :
-  def __init__(self, mom=None, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address = '') :
-    FaustSlider.__init__(self, mom=mom, o=X_AXIS, wa=wa, sa=sa, sp=sp, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h, address=address)
+  def __init__(self, mom=None, iwa=40, isa=200, mwa=20, msa=100, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address = '') :
+    FaustSlider.__init__(self, mom=mom, o=X_AXIS, iwa=iwa, isa=isa, mwa=mwa, msa=msa, sp=sp, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h, address=address)
 
 class FaustVerticalSlider(FaustSlider) :
-  def __init__(self, mom=None, wa=40, sa=200, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address = '') :
-    FaustSlider.__init__(self, mom=mom, o=Y_AXIS, wa=wa, sa=sa, sp=sp, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h, address=address)
+  def __init__(self, mom=None, iwa=40, isa=200, mwa=20, msa=100, sp=0.15, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address = '') :
+    FaustSlider.__init__(self, mom=mom, o=Y_AXIS, iwa=iwa, isa=isa, mwa=mwa, msa=msa, sp=sp, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h, address=address)
 
 class FaustBarGraph(FaustIncrementalObject) :
   '''
   kind of a code dup with slider...
   '''
-  def __init__(self, mom=None, o=X_AXIS, wa=40, sa=200, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address=None) :
+  def __init__(self, mom=None, o=X_AXIS, iwa=40, isa=200, mwa=20, msa=100, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address=None) :
     self.mom = mom
     self.o = o
-    self.wa = wa
-    self.sa = sa
+    self.iwa = iwa
+    self.isa = isa
+    self.mwa = mwa
+    self.msa = msa
+    self._wa = iwa
+    self._sa = isa
     self.label = label
     self.unit = unit
     self.default = bound(default,mn,mx)
@@ -311,9 +335,16 @@ class FaustBarGraph(FaustIncrementalObject) :
     self.value_box_w = value_box_w
     self.value_box_h = value_box_h
     self.address = address
+  def wa(self) :
+    return self._wa
+  def sa(self) :
+    return self._sa
+  def compress(self, coef) :
+    self._wa = max(self.mwa, self._wa * coef)
+    self._sa = max(self.msa, self._sa * coef)
   def internal_dims(self) :
-    x = xy(self.o, self.sa, self.wa)
-    y = xy(self.o, self.wa, self.sa)
+    x = xy(self.o, self.sa(), self.wa())
+    y = xy(self.o, self.wa(), self.sa())
     return x,y
   def dims(self) :
     ugh = self.internal_dims()
@@ -323,22 +354,22 @@ class FaustBarGraph(FaustIncrementalObject) :
     return ugh
   def draw_unsliding_component_svg(self, fill, stroke, id) :
     out = '<path d="M0 0L{0} 0L{0} {1}L0 {1}L0 0" style="fill:{2};stroke:{3};" id="{4}" />'.format(
-      xy(self.o, self.sa, self.wa), xy(self.o, self.wa, self.sa),
+      xy(self.o, self.sa(), self.wa()), xy(self.o, self.wa(), self.sa()),
       fill, stroke,
       xy(self.o, 'faust_hbargraph_joint_', 'faust_vbargraph_joint_')+id)
     return out
   def draw_joint_svg(self, id) :
     return self.draw_unsliding_component_svg(color_to_rgb(self.fill), color_to_rgb(BLACK), id)
   def draw_sliding_component_svg(self, fill, stroke, id) :
-    default = remap(self.default, self.mn, self.mx, 0, self.sa)
+    default = remap(self.default, self.mn, self.mx, 0, self.sa())
     out = '<path id="{0}" d="M0 0L{1} 0L{1} {2}L0 {2}L0 0" style="fill:{3};stroke:{4}" onmousedown="({5}(\'{0}\',{6},{7},{8},{9},\'{10}\'))()" onmouseup="mouseUpFunction()" onload="(path_to_id(\'{11}\',\'{0}\'))()"/>'.format(
       xy(self.o, 'faust_hbargraph_joint_', 'faust_vbargraph_joint_')+id,
-      xy(self.o, default, self.wa),
-      xy(self.o, self.wa, default),
+      xy(self.o, default, self.wa()),
+      xy(self.o, self.wa(), default),
       fill, stroke,
       # function arguments
       xy(self.o,'horizontal_barslide','vertical_barslide'),
-      self.sa,
+      self.sa(),
       self.mn,
       self.mx,
       self.step,
@@ -363,12 +394,12 @@ class FaustBarGraph(FaustIncrementalObject) :
     return group_open + joint + meter + box + value + label + group_close
 
 class FaustHorizontalBarGraph(FaustBarGraph) :
-  def __init__(self, mom=None, wa=40, sa=200, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address=None) :
-    FaustBarGraph.__init__(self, mom=mom, o=X_AXIS, wa=wa, sa=sa, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h, address=address)
+  def __init__(self, mom=None, iwa=40, isa=200, mwa=20, msa=100, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address=None) :
+    FaustBarGraph.__init__(self, mom=mom, o=X_AXIS, iwa=iwa, isa=isa, mwa=mwa, msa=msa, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h, address=address)
 
 class FaustVerticalBarGraph(FaustBarGraph) :
-  def __init__(self, mom=None, wa=40, sa=200, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address=None) :
-    FaustBarGraph.__init__(self, mom=mom, o=Y_AXIS, wa=wa, sa=sa, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h, address=address)
+  def __init__(self, mom=None, iwa=40, isa=200, mwa=20, msa=100, label='foo', unit='grames', default=50, mn=0, mx=100, step=1, lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING, gravity=(CENTER, CENTER), fill=CYAN, value_box_w = VALUE_BOX_W, value_box_h = VALUE_BOX_H, address=None) :
+    FaustBarGraph.__init__(self, mom=mom, o=Y_AXIS, iwa=iwa, isa=isa, mwa=mwa, msa=msa, label=label, unit=unit, default=default, mn=mn, mx=mx, step=step, lpadding_y=lpadding_y, box_padding=box_padding, gravity=gravity, fill=fill, value_box_w=value_box_w, value_box_h=value_box_h, address=address)
 
 class FaustCheckBox(FaustObject) :
   '''
@@ -386,6 +417,9 @@ class FaustCheckBox(FaustObject) :
     self.fill = fill
     self.lpadding_y = lpadding_y
     self.address = address
+  def compress(self, coef) :
+    # do nothing...we want the size of this to always be the same
+    pass
   def internal_dims(self) :
     log(self, ("DIMS FOR CHECKBOX", self.d, self.d))
     return self.d, self.d
@@ -427,29 +461,40 @@ class FaustCheckBox(FaustObject) :
 class FaustButton(FaustObject) :
   '''
   '''
-  def __init__(self, mom=None, w=80, h=40, label='foo', gravity=(CENTER, CENTER), fillOn=PINK, fillOff=GREEN, baselineSkip = 5, address='') :
+  def __init__(self, mom=None, iw=80, ih=40, mw=40, mh=20, label='foo', gravity=(CENTER, CENTER), fillOn=PINK, fillOff=GREEN, baselineSkip = 5, address='') :
     FaustObject.__init__(self)
     self.mom = mom
-    self.w = w
-    self.h = h
+    self.iw = iw
+    self.ih = ih
+    self.mw = mw
+    self.mh = mh
+    self._w = iw
+    self._h = ih
     self.label = label
     self.gravity = gravity # [x,y] gravity for SELF
     self.fillOn = fillOn
     self.fillOff = fillOff
     self.baselineSkip = baselineSkip
     self.address = address
+  def w(self) :
+    return self._w
+  def h(self) :
+    return self._h
+  def compress(self, coef) :
+    self._w = min(self.mw, self._w * coef)
+    self._h = min(self.mh, self._h * coef)
   def dims(self) :
-    log(self, ("DIMS FOR BUTTON", self.w, self.h))
-    return self.w, self.h
+    log(self, ("DIMS FOR BUTTON", self.w(), self.h()))
+    return self.w(), self.h()
   def draw_button_svg(self, id) :
     rf = 10
     out = '<path id="{8}" d="M{0} 0L{1} 0C{2} 0 {2} 0 {2} {3}L{2} {4}C{2} {5} {2} {5} {1} {5}L{0} {5}C0 {5} 0 {5} 0 {4}L0 {3}C0 0 0 0 {0} 0" style="fill:{6};stroke:{7};" onload="(initiate_button(\'{8}\',\'{6}\',\'{7}\',\'{9}\'))()" onmousedown="(button_down(\'{8}\'))()" onmouseup="(button_up(\'{8}\'))()"/>'.format(
       rf,
-      self.w - rf,
-      self.w,
+      self.w() - rf,
+      self.w(),
       rf,
-      self.h - rf,
-      self.h,
+      self.h() - rf,
+      self.h(),
       color_to_rgb(self.fillOff),
       color_to_rgb(self.fillOn),
       'faust_button_box_'+id,
@@ -457,8 +502,8 @@ class FaustButton(FaustObject) :
     return out
   def draw_label_svg(self, id) :
     out = '<text transform="translate({0},{1})" text-anchor="middle"><tspan onmousedown="(button_down(\'{3}\'))()" onmouseup="(button_up(\'{3}\'))()">{2}</tspan></text>'.format(
-      self.w / 2.0,
-      self.h / 2.0 + self.baselineSkip,
+      self.w() / 2.0,
+      self.h() / 2.0 + self.baselineSkip,
       self.label,
       'faust_button_text_'+id)
     return out
@@ -493,6 +538,9 @@ class FaustNumericalEntry(FaustIncrementalObject) :
     self.lpadding_y = lpadding_y
     self.step = step
     self.address = address
+  def compress(self, coef) :
+    # do nothing...we want the size of this to always be the same
+    pass
   def internal_dims(self) :
     dims = (self.value_box_w, self.value_box_h)
     log(self, ("DIMS FOR NUMERICAL ENTRY",) + dims)
@@ -588,12 +636,21 @@ class LayoutManager(FaustObject) :
     rp.append((rp[-1][0] + self.padding, rp[-1][1]))
     rp.append((rp[0][0] - self.padding, rp[0][1]))
     return rp
+  def compress(self, coef) :
+    for obj in self.objs :
+      obj.compress(coef)
   def do_spacing(self, x, y) :
     # we place objects in their place according to gravity
     # we allow layout managers to fill the full space they're allotted
     # for now, we let stuff mess up if the dims are too squished
     self.w = x
     self.h = y
+    # first pass for compression
+    ratio, leftover = self.get_ratio_and_leftover(x, y)
+    # now compress
+    if ratio < 1 :
+      self.compress(ratio)
+    # second pass after compression
     ratio, leftover = self.get_ratio_and_leftover(x, y)
     # increase padding by size
     padding = self.padding * ratio
@@ -631,6 +688,7 @@ class LayoutManager(FaustObject) :
     my_x = self.get_x_offset()
     my_y = self.get_y_offset()
     realpoints = [coord_sub(pt, (my_x, my_y)) for pt in self.get_real_points()]
+    self.box_cache.clear() # in case we do typesetting multiple times
     for point in realpoints :
       self.box_cache.add_point(point)
   def draw_label_svg(self) :
@@ -670,6 +728,9 @@ class TabGroup(FaustObject) :
     self.y = 0
     self.baselineSkip = baselineSkip
     self.id = randString()
+  def compress(self, coef) :
+    for obj in self.objs :
+      obj.compress(coef)
   def setX(self, x) :
     self.x = x
     for obj in self.objs :
