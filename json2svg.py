@@ -9,7 +9,7 @@ import sys
 import xml.dom.minidom
 from xmlutilities import *
 
-D = svglib.SVGDocument(js=gulp('faust_ui.js'), css=gulp('faust_css.css'), verbose=VERBOSE, w=1200, h=600)
+D = svglib.SVGDocument(js=gulp('faust_ui.js'), css=gulp('faust_css.css'), verbose=VERBOSE, w=1200, h=600, constrain=False, title=sys.argv[1].rpartition('.')[0])
 H = svglib.HTMLDocument(js="/* no js */", css="/* no css */", other=FAUST_JS)
 H.nodes.append(D)
 
@@ -85,7 +85,7 @@ def make_hgroup(dct) :
   return make_group(X_AXIS, dct)
 
 def make_group(axis, dct) :
-  lm = svglib.LayoutManager(o=axis, label=dct["label"])
+  lm = svglib.LayoutManager(o=axis, label=dct["label"], constrain=False)
   for item in dct["items"] :
     if item["type"] == "hgroup" :
       lm.objs.append(make_hgroup(item))
@@ -113,7 +113,7 @@ def make_group(axis, dct) :
   return lm
 
 def make_tgroup(dct) :
-  tg = svglib.TabGroup()
+  tg = svglib.TabGroup(constrain=False)
   for item in dct["items"] :
     if item["type"] == "hgroup" :
       tg.objs.append(make_hgroup(item))

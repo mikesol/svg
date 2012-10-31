@@ -87,8 +87,8 @@ function dispatch (data) {
   }
 }
 
-function update (root) {
-  $.get( "http://localhost:5510/UITester", function(data) { dispatch( data ); } );
-  setTimeout ( function () { update(root); }, 200);
+function update () {
+  $.get( "http://localhost:5510/"+ROOT, function(data) { dispatch( data ); } );
+  setTimeout ( function () { update(); }, 200);
 }
-$(document).ready(function() { update ($('#root').val()); });
+$(document).ready(function() { update (); });

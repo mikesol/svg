@@ -693,7 +693,7 @@ class FaustNumericalEntry(FaustIncrementalObject) :
     return group_open + left_button + right_button + minus + plus + box + value + label + group_close
 
 class LayoutManager(FaustObject) :
-  def __init__(self, mom=None, o=X_AXIS, padding=10, objs=None, gravity = (CENTER, CENTER), label='foo', lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING) :
+  def __init__(self, mom=None, o=X_AXIS, padding=10, objs=None, constrain=True, gravity=(CENTER, CENTER), label='foo', lpadding_y=TEXT_HEIGHT, box_padding=TEXT_BOX_PADDING) :
     self.mom = mom
     self.o = o
     self.padding = padding
@@ -710,6 +710,7 @@ class LayoutManager(FaustObject) :
     self.box_cache = Box()
     self.id = randString()
     self.fill = magic_color()
+    self.constrain = constrain
   def dims(self) :
     ugh = self.internal_dims()
     #out = (ugh[0], ugh[1] + self.lpadding_y + TEXT_PADDING)
@@ -725,12 +726,17 @@ class LayoutManager(FaustObject) :
     out[self.o] += (self.padding * (len(self.objs) + 1))
     return tuple(out)
   def get_ratio_and_leftover(self, x, y) :
-    dims = self.internal_dims()
-    ratio = min(1.0 * x / dims[X_AXIS], 1.0 * y / dims[Y_AXIS])
-    log(self, ("RATIO FOR LAYOUT MANAGER", ratio))
-    leftover = (x - (dims[X_AXIS] * ratio), y - (dims[Y_AXIS] * ratio))
-    log(self, ("LEFTOVER FOR LAYOUT MANAGER", leftover))
-    return ratio, leftover
+    # NOTE
+    # self.constrain controls a LOT
+    if self.constrain :
+      dims = self.internal_dims()
+      ratio = min(1.0 * x / dims[X_AXIS], 1.0 * y / dims[Y_AXIS])
+      log(self, ("RATIO FOR LAYOUT MANAGER", ratio))
+      leftover = (x - (dims[X_AXIS] * ratio), y - (dims[Y_AXIS] * ratio))
+      log(self, ("LEFTOVER FOR LAYOUT MANAGER", leftover))
+      return ratio, leftover
+    else :
+      return 1.0, (0.0, 0.0)
   def get_real_points(self) :
     rp = []
     for obj in self.objs :
@@ -758,6 +764,10 @@ class LayoutManager(FaustObject) :
     # we place objects in their place according to gravity
     # we allow layout managers to fill the full space they're allotted
     # for now, we let stuff mess up if the dims are too squished
+    if not self.constrain :
+      dims = self.dims()
+      x = dims[0]
+      y = dims[1]
     self.w = x
     self.h = y
     # first pass for compression
@@ -832,7 +842,7 @@ class LayoutManager(FaustObject) :
     return group_open + background + main + label + group_close
 
 class TabGroup(FaustObject) :
-  def __init__(self, mom=None, headroom=40, x_padding=10, x_width=80, objs=None, default = 0, baselineSkip = 5) :
+  def __init__(self, mom=None, headroom=40, x_padding=10, x_width=80, objs=None, default = 0, baselineSkip = 5, constrain=True) :
     self.mom = mom
     self.objs = [] if not objs else objs
     self.headroom = headroom
@@ -843,6 +853,7 @@ class TabGroup(FaustObject) :
     self.y = 0
     self.baselineSkip = baselineSkip
     self.id = randString()
+    self.constrain = constrain
   def compress(self, coef) :
     for obj in self.objs :
       obj.compress(coef)
@@ -861,7 +872,16 @@ class TabGroup(FaustObject) :
       dim = obj.dims()
       x = max(x, dim[0])
       y = max(y, dim[1])
-    return x, y + headroom
+    return x, y + self.headroom
+  '''
+  def do_spacing(self, x, y) :
+    dims = self.dims()
+    for obj in self.objs :
+      dim = obj.dims()
+      obj.x = 0 + (0 if self.constrain else (dims[0] - dim[0]) / 2.0)
+      obj.y = self.headroom + (0 if self.constrain else (dims[1] - dim[1]) / 2.0)
+      obj.do_spacing(x, y - self.headroom)
+  '''
   def do_spacing(self, x, y) :
     for obj in self.objs :
       obj.x = 0
@@ -944,7 +964,7 @@ class XMLDocument(object) :
     return out
 
 class SVGDocument(XMLDocument) :
-  def __init__(self, js='', css='', other='', lm=None, w=1200, h=800, verbose=False) :
+  def __init__(self, js='', css='', other='', lm=None, w=1200, h=800, verbose=False, constrain=False, title='') :
     self.js = js
     self.css = css
     self.lm = lm
@@ -952,18 +972,24 @@ class SVGDocument(XMLDocument) :
     self.h = h
     self.verbose = verbose
     self.other = other # way to sneak in other stuff
+    self.constrain = constrain
+    self.title = title
   def get_x_offset(self) : return 0
   def get_y_offset(self) : return 0
-  def svg_open(self) :
-    out = '<svg xmlns="http://www.w3.org/2000/svg">'
+  def svg_open(self, viewbox = None) :
+    out = '<svg xmlns="http://www.w3.org/2000/svg" width="{0}px" height="{1}px" {2}>'.format(
+      self.w,
+      self.h,
+      'viewbox="{0} {1} {2} {3}"'.format(viewbox[0],viewbox[1],viewbox[2],viewbox[3]) if viewbox else ''
+    )
     return out
   def svg_close(self) :
     out = '</svg>'
     return out
   def export(self) :
-    svg_open = self.svg_open()
+    svg_open = self.svg_open(viewbox=None if self.constrain else (0,0)+self.lm.dims())
     js_open = self.js_open()
-    js = self.js
+    js = self.js+'\nvar ROOT="'+self.title+'";\n'
     js_close = self.js_close()
     css_open = self.css_open()
     css = self.css
