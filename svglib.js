@@ -110,7 +110,7 @@ _FAUST_NAMESPACE["FaustIncrementalObject"].prototype.make_value_value = function
   //return vv;
 }
 
-_FAUST_NAMESPACE["FaustIncrementalObject"].prototype.make_label = function(svg, parent, id) {
+_FAUST_NAMESPACE["FaustIncrementalObject"].prototype.make_label = function(svg, parent,id) {
   var vl = svg.text(
     parent,
     0,
