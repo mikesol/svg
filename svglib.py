@@ -764,8 +764,8 @@ class LayoutManager(FaustObject) :
     # we place objects in their place according to gravity
     # we allow layout managers to fill the full space they're allotted
     # for now, we let stuff mess up if the dims are too squished
+    dims = self.dims()
     if not self.constrain :
-      dims = self.dims()
       x = dims[0]
       y = dims[1]
     self.w = x
@@ -791,8 +791,8 @@ class LayoutManager(FaustObject) :
       ny = xy(self.o, y, dim[Y_AXIS] * ratio)
       if isinstance(obj, LayoutManager) :
         # find offsets
-        obj.x = xy(self.o, running_count, 0)
-        obj.y = xy(self.o, 0, running_count)
+        obj.x = xy(self.o, running_count, 0 if self.constrain else (dims[X_AXIS] - dim[X_AXIS]) / 2.0)
+        obj.y = xy(self.o, 0 if self.constrain else (dims[Y_AXIS] - dim[Y_AXIS]) / 2.0, running_count)
         obj.do_spacing(nx, ny)
       elif isinstance(obj, TabGroup) :
         obj.setX(xy(self.o, running_count, 0))
