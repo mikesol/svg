@@ -597,7 +597,8 @@ class LayoutManager(FaustObject) :
     self.fill = magic_color()
   def dims(self) :
     ugh = self.internal_dims()
-    out = (ugh[0], ugh[1] + self.lpadding_y + TEXT_PADDING)
+    #out = (ugh[0], ugh[1] + self.lpadding_y + TEXT_PADDING)
+    out = (ugh[0], ugh[1] + max(self.lpadding_y, self.padding) + self.padding + TEXT_PADDING)
     log(self, ("DIMS FOR LAYOUT MANAGER",)+out+(self.x, self.y))
     return out
   def internal_dims(self) :
@@ -748,6 +749,8 @@ class TabGroup(FaustObject) :
     return x, y + headroom
   def do_spacing(self, x, y) :
     for obj in self.objs :
+      obj.x = 0
+      obj.y = self.headroom
       obj.do_spacing(x, y - self.headroom)
   def draw_label_svg(self, x, y, l, goodid, badidstr) :
     out = '<text transform="translate({0},{1})" text-anchor="middle"><tspan onclick="shuffletabs(\'{3}\', \'{4}\', {5}, {6})">{2}</tspan></text>'.format(
@@ -757,7 +760,7 @@ class TabGroup(FaustObject) :
       goodid,
       badidstr,
       self.x,
-      self.y # + self.headroom
+      self.y + self.headroom
     )
     return out
   def draw_tab_svg(self,w,h,x,y,goodid,badidstr, fill) :
@@ -769,7 +772,7 @@ class TabGroup(FaustObject) :
       goodid,
       badidstr,
       self.x,
-      self.y,# + self.headroom,
+      self.y + self.headroom,
       color_to_rgb(fill))
     return out
   def draw_tabs_svg(self) :
