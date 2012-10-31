@@ -119,7 +119,7 @@ class FaustRotatingButton(FaustIncrementalObject) :
     return ugh
   def dims(self) :
     ugh = self.internal_dims()
-    return ugh[0], ugh[1] + (2 * self.lpadding_y) + TEXT_PADDING
+    return max(ugh[0], self.value_box_w), ugh[1] + (2 * self.lpadding_y) + TEXT_PADDING
   def get_translation(self) :
     # first, we need to translate the coordinate space so that the
     # left-bottom is 0,0
