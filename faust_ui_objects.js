@@ -384,13 +384,13 @@ _f4u$t.Slider.prototype.make_knob = function(svg, id) {
       label : this.label,
       address : this.address
     },
-    _FAUST_NAMESPACE['initiate_'+this.type]
+    _f4u$t['initiate_'+this.type]
   );
 
   knob.bind(
     'mousedown',
     { id : full_id },
-    _FAUST_NAMESPACE['activate_'+this.type]
+    _f4u$t['activate_'+this.type]
   );
   
   return knob;
@@ -404,13 +404,13 @@ _f4u$t.Slider.prototype.make = function(svg) {
   g.add(this.make_value_box(
     svg,
     id,
-    _FAUST_NAMESPACE[this.type+'_key_sink'],
+    _f4u$t[this.type+'_key_sink'],
     {id : this.id}
   ));
   g.add(this.make_value_value(
     svg,
     id,
-    _FAUST_NAMESPACE[this.type+'_key_sink'],
+    _f4u$t[this.type+'_key_sink'],
     {id : this.id}
   ));
   g.add(this.make_label(svg, id));
@@ -468,7 +468,7 @@ _f4u$t.BarGraph.prototype.make_meter = function(svg, id) {
       id : full_id,
       address : this.address
     },
-    _FAUST_NAMESPACE['initiate_'+this.type]
+    _f4u$t['initiate_'+this.type]
   );
   
   return meter;
@@ -558,13 +558,13 @@ _f4u$t.CheckBox.prototype.make_box = function(svg, id) {
       id : full_id,
       address : this.address
     },
-    _FAUST_NAMESPACE['initiate_checkbox']
+    _f4u$t.initiate_checkbox
   );
 
   box.bind(
     'mousedown',
     { id : full_id },
-    _FAUST_NAMESPACE['change_checkbox']
+    _f4u$t.change_checkbox
   );
   
   return box;
@@ -590,13 +590,13 @@ _f4u$t.CheckBox.prototype.make_check = function(svg, id) {
       id : full_id,
       address : this.address
     },
-    _FAUST_NAMESPACE['initiate_checkbox']
+    _f4u$t.initiate_checkbox
   );
 
   box.bind(
     'mousedown',
     { id : full_id },
-    _FAUST_NAMESPACE['change_checkbox']
+    _f4u$t.change_checkbox
   );
   
   return box;
@@ -688,19 +688,19 @@ _f4u$t.Button.prototype.make_button_button = function(svg, id) {
       id : full_id,
       address : this.address,
     },
-    _FAUST_NAMESPACE['initiate_button']
+    _f4u$t.initiate_button
   );
 
   button.bind(
     'mousedown',
     { id : full_id },
-    _FAUST_NAMESPACE['button_down']
+    _f4u$t.button_down
   );
 
   button.bind(
     'mouseup',
     { id : full_id },
-    _FAUST_NAMESPACE['button_up']
+    _f4u$t.button_up
   );
   
   return button;
@@ -723,13 +723,13 @@ _f4u$t.Button.prototype.make_label = function(svg, id) {
   vi.bind(
     'mousedown',
     { id : full_id },
-    _FAUST_NAMESPACE['button_down']
+    _f4u$t.button_down
   );
 
   vi.bind(
     'mouseup',
     { id : full_id },
-    _FAUST_NAMESPACE['button_up']
+    _f4u$t.button_up
   );
 
   return vl;
@@ -825,7 +825,7 @@ _f4u$t.NumericalEntry.prototype.make_button = function(svg, id, xo, incr) {
       id : full_id,
       incr : incr
     },
-    _FAUST_NAMESPACE['activate_nentry']
+    _f4u$t.activate_nentry
   );
   
   return button;
@@ -853,7 +853,7 @@ _f4u$t.NumericalEntry.prototype.make_minus = function(svg, id) {
       id : full_id,
       incr : false
     },
-    _FAUST_NAMESPACE['activate_nentry']
+    _f4u$t.activate_nentry
   );
   
   return minus;
@@ -886,7 +886,7 @@ _f4u$t.NumericalEntry.prototype.make_plus = function(svg, id) {
       id : full_id,
       incr : true
     },
-    _FAUST_NAMESPACE['activate_nentry']
+    _f4u$t.activate_nentry
   );
   
   return plus;
@@ -1269,7 +1269,7 @@ _f4u$t.TabGroup.prototype.make = function(svg) {
   var g = this.make_group(
     svg,
     self.id,
-    _FAUST_NAMESPACE['cache_tab_group'],
+    _f4u$t.cache_tab_group,
     {
       self.def,
       self.id,
