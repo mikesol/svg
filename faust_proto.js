@@ -1,5 +1,6 @@
 // we want to stay in the faust namespace, so...
 var _f4u$t = {};
+
 _f4u$t.TEXT_HEIGHT = 20;
 _f4u$t.TEXT_PADDING = 10;
 _f4u$t.VALUE_BOX_W = 60;
@@ -95,7 +96,7 @@ _f4u$t.randString = function() {
 }
 
 _f4u$t.sign = function(x) {
-  return (x == 0 ? x : Math.floor(Math.abs(x) / x);
+  return (x == 0 ? x : Math.floor(Math.abs(x) / x));
 }
 
 _f4u$t.find_all_90s = function(a0, sweep) {
@@ -142,13 +143,12 @@ _f4u$t.bound = function(v,m,n) {
 
 // a Box class
 
-_f4u$t.Box = function(object) {
-  this.clear();
-}
-
-_f4u$t.Box.prototype.clear = function() {
+_f4u$t.Box = function() {
+  this.clear = function() {
     this.x = [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY];
     this.y = [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY];
+  }
+  this.clear();
 }
 
 _f4u$t.Box.prototype.add_points = function(pts) {
@@ -221,7 +221,7 @@ Array.prototype.min = function() {
 
 Array.prototype.sum = function() {
   var sum = 0;
-  for(var i = 0,; i < this.length; i++) {
+  for(var i = 0; i < this.length; i++) {
     sum += this[i];
   }
   return sum;

@@ -144,7 +144,7 @@ _f4u$t.updateXY = function(e) {
   _f4u$t.PREV[_f4u$t.Y_AXIS] = e.clientY;
 }
 
-// main _FAUST_NAMESPACE[""] = function to move currently-selected slider
+// main function to move currently-selected slider
 _f4u$t.moveActiveObject = function(e) {
   if (_f4u$t._I == 0) {
     _f4u$t.updateXY(e);
@@ -407,7 +407,7 @@ _f4u$t.activate_rbutton = function(I) {
 }
 
 _f4u$t.button_color_changer = function(I, F) {
-  // for now, this is an easier _FAUST_NAMESPACE[""] = function because no dragging is involved...
+  // this is easier because no mouse-coordinate-based dragging is involved...
   var button = document.getElementById('faust_button_box_'+_f4u$t.unique(I));
   button.style.fill = F;
 }
@@ -613,7 +613,7 @@ _f4u$t.generic_translate = function(id, x, y) {
   elt.setAttribute("transform", movetothis);  
 }
 
-_f4u$t.cache_tab_group = function(index, id, ids) {
+_f4u$t.cache_tab_group = function(index, ids) {
   var strar = ids.split('#');
   // boo svg...tags
   for (var i = 0; strar.length > i; i++) {
@@ -641,4 +641,3 @@ document.onkeypress = _f4u$t.keys_to_sink;
 document.onkeydown = _f4u$t.make_delete_key_work;
 document.onmouseup = _f4u$t.clearIdCache;
 document.onmousemove = _f4u$t.moveActiveObject;
-

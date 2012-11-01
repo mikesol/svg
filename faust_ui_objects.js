@@ -123,7 +123,7 @@ _f4u$t.RotatingButton = function(options) {
   this.step = options.step || 1;
   this.lpadding_y = options.lpadding_y || _f4u$t.TEXT_HEIGHT;
   this.box_padding = options.box_padding || _f4u$t.TEXT_BOX_PADDING;
-  this.gravity options.gravity || {0 : _f4u$t.CENTER, 1: _f4u$t.CENTER)};
+  this.gravity = options.gravity || [_f4u$t.CENTER, _f4u$t.CENTER];
   this.fill= options.fill || _f4u$t.CYAN;
   this.value_box_w = options.value_box_w || _f4u$t.VALUE_BOX_W;
   this.value_box_h = options.value_box_h || _f4u$t.VALUE_BOX_H;
@@ -155,7 +155,7 @@ _f4u$t.RotatingButton.prototype.get_maybe_extremal_coords = function() {
 
 _f4u$t.RotatingButton.prototype.internal_dims = function() {
   var coords = this.get_maybe_extremal_coords();
-  var box = _f4u$t.Box();
+  var box = new _f4u$t.Box();
   for (var i = 0; i < coords.length; i++) {
     box.add_point(coords[i]);
   }
@@ -228,8 +228,8 @@ _f4u$t.RotatingButton.prototype.make_knob = function(svg, id) {
     d,
     {
       style : "fill:grey;stroke:black;",
-      id : full_id;
-      transform : 'translate(0,0) scale(1,1) rotate('+(startp - half_slider_angle + 180)+','+origin[0]+','+origin[1]+')';
+      id : full_id,
+      transform : 'translate(0,0) scale(1,1) rotate('+(startp - half_slider_angle + 180)+','+origin[0]+','+origin[1]+')'
     }
   );
   
@@ -368,7 +368,7 @@ _f4u$t.Slider.prototype.make_knob = function(svg, id) {
     {
       id : full_id,
       style : "fill:grey;stroke:black;",
-      transform : 'translate('+x+','+y+')';
+      transform : 'translate('+x+','+y+')'
     }
   );
 
@@ -579,8 +579,8 @@ _f4u$t.CheckBox.prototype.make_check = function(svg, id) {
     "M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z",
     {
       id : full_id,
-      transform="scale("+scale+","+scale+") translate(-1.0896806, -4.3926201)",
-      style="fill:"+_f4u$t.color_to_rgb(this.fill)+";opacity:"+(this.def == 1 ? 1.0 : 0.0)+";"
+      transform : "scale("+scale+","+scale+") translate(-1.0896806, -4.3926201)",
+      style : "fill:"+_f4u$t.color_to_rgb(this.fill)+";opacity:"+(this.def == 1 ? 1.0 : 0.0)+";"
     }
   );
 
@@ -602,7 +602,7 @@ _f4u$t.CheckBox.prototype.make_check = function(svg, id) {
   return box;
 }
 
-_f4u$t.Checkbox.prototype.make_label = function(svg, id) {
+_f4u$t.CheckBox.prototype.make_label = function(svg, id) {
   var vl = svg.text(
     0,
     0,
@@ -676,7 +676,7 @@ _f4u$t.Button.prototype.make_button_button = function(svg, id) {
     d,
     {
       id : full_id,
-      style="fill:"+_f4u$t.color_to_rgb(this.fillOff)+";"
+      style : "fill:"+_f4u$t.color_to_rgb(this.fillOff)+";"
     }
   );
 
@@ -713,7 +713,7 @@ _f4u$t.Button.prototype.make_label = function(svg, id) {
     0,
     this.label,
     {
-      text-anchor: 'middle',
+      "text-anchor" : 'middle',
       id: 'faust_label_'+id,
       transform: 'translate('+(this.w() / 2.0)+','+(this.h() / 2.0 + this.baselineSkip)+')',
       style: 'fill:white;stroke:black;'
@@ -812,9 +812,9 @@ _f4u$t.NumericalEntry.prototype.make_button = function(svg, id, xo, incr) {
   var button = svg.path(
     d,
     {
-      transform = 'translate('+xo+',0)',
+      transform : 'translate('+xo+',0)',
       id : full_id,
-      style="fill:grey;"
+      style : "fill:grey;"
     }
   );
 
@@ -873,7 +873,7 @@ _f4u$t.NumericalEntry.prototype.make_plus = function(svg, id) {
   var plus = svg.path(
     d,
     {
-      transform : 'translate('+(this.w() / 2.0 + this.padding)+',0)';
+      transform : 'translate('+(this.w() / 2.0 + this.padding)+',0)',
       id : full_id,
       style: 'stroke:black;'
     }
@@ -934,7 +934,7 @@ _f4u$t.LayoutManager = function(options) {
   this.y = 0;
   this.w = 0;
   this.h = 0;
-  this.box_cache = _f4u$t.Box();
+  this.box_cache = new _f4u$t.Box();
   this.id = _f4u$t.randString();
   this.fill = _f4u$t.magic_color();
 }
@@ -1117,7 +1117,7 @@ _f4u$t.LayoutManager.prototype.make = function(svg) {
 
   g.add(this.make_background(svg));
   g.add(this.make_label(svg));
-  for (vsize i = 0; i < this.objs.length; i++) {
+  for (var i = 0; i < this.objs.length; i++) {
     g.add(this.objs[i].make(svg));
   }
   
@@ -1195,7 +1195,7 @@ _f4u$t.TabGroup.prototype.make_label = function(svg, x, y, l, goodid, badidstr) 
     0,
     l,
     {
-      text-anchor : 'middle',
+      "text-anchor" : 'middle',
       transform: 'translate('+x+','+y+')'
     }
   );
@@ -1271,14 +1271,13 @@ _f4u$t.TabGroup.prototype.make = function(svg) {
     self.id,
     _f4u$t.cache_tab_group,
     {
-      self.def,
-      self.id,
-      this.objs.map(function(obj) {return obj.id;}).join('#');
+      def : this.def,
+      ids : this.objs.map(function(obj) {return obj.id;}).join('#')
     }
   );
 
   g.add(this.make_tabs(svg));
-  for (vsize i = 0; i < this.objs.length; i++) {
+  for (var i = 0; i < this.objs.length; i++) {
     g.add(this.objs[i].make(svg));
   }
 

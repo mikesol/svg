@@ -9,7 +9,7 @@ _f4u$t.has_knob = function(dct) {
 }
 
 _f4u$t.make_rbutton = function(dct) {
-  return _f4u$t.RotatingButton({
+  return new _f4u$t.RotatingButton({
     label : dct["label"],
     mn : parseFloat(dct["min"]),
     mx : parseFloat(dct["max"]),
@@ -31,7 +31,7 @@ _f4u$t.make_slider = function(kls, dct) {
   if (_f4u$t.has_knob(dct)) {
     return _f4u$t.make_rbutton(dct);
   }
-  return kls({
+  return new kls({
     label : dct["label"],
     mn : parseFloat(dct["min"]),
     mx : parseFloat(dct["max"]),
@@ -50,7 +50,7 @@ _f4u$t.make_vbargraph = function(dct) {
 }
 
 _f4u$t.make_bargraph = function(kls, dct) {
-  return kls({
+  return new kls({
     label : dct["label"],
     mn : parseFloat(dct["min"]),
     mx : parseFloat(dct["max"]),
@@ -60,14 +60,14 @@ _f4u$t.make_bargraph = function(kls, dct) {
 
 
 _f4u$t.make_button = function(dct) {
-  return _f4u$t.Button({
+  return new _f4u$t.Button({
     label : dct["label"],
     address : dct["address"]
   });
 }
 
 _f4u$t.make_checkbox = function(dct) {
-  return _f4u$t.CheckBox({
+  return new _f4u$t.CheckBox({
     label : dct["label"],
     address : dct["address"],
     def : (dct["init"] == "1" ? true : false)
@@ -78,15 +78,15 @@ _f4u$t.make_nentry = function(dct) {
   if (_f4u$t.has_knob(dct)) {
     return _f4u$t.make_rbutton(dct);
   }
-  return _f4u$t.NumericalEntry({
+  return new _f4u$t.NumericalEntry({
     label : dct["label"],
     mn : parseFloat(dct["min"]),
     mx : parseFloat(dct["max"]),
     step : parseFloat(dct["step"]),
     address : dct["address"],
-    def : parseFloat(dct["init"]
+    def : parseFloat(dct["init"])
   });
-)
+}
 
 _f4u$t.make_hgroup = function(dct) {
   return _f4u$t.make_group(_f4u$t.X_AXIS, dct);
@@ -97,11 +97,13 @@ _f4u$t.make_vgroup = function(dct) {
 }
 
 _f4u$t.make_group = function(axis, dct) {
-  var lm = _f4u$t.LayoutManager({
+console.log('ok');
+  var lm = new _f4u$t.LayoutManager({
     o : axis,
     label : dct["label"]
   });
-
+console.log(lm);
+console.log('not ok');
   for (var i = 0; i < dct["items"].length; i++) {
     if (dct["items"][i]["type"] == "hgroup") {
       lm.objs.push(_f4u$t.make_hgroup(dct["items"][i]));
@@ -132,6 +134,7 @@ _f4u$t.make_group = function(axis, dct) {
     }
     else if (dct["items"][i]["type"] == "nentry") {
       lm.objs.push(_f4u$t.make_nentry(dct["items"][i]));
+    }
     else {
       console.log("UFO: Unidentified Faust Object");
     }
@@ -141,7 +144,7 @@ _f4u$t.make_group = function(axis, dct) {
 }
 
 _f4u$t.make_tgroup = function(dct) {
-  var tg = _f4u$t.TabGroup({});
+  var tg = new _f4u$t.TabGroup({});
 
   for (var i = 0; i < dct["items"].length; i++) {
     if (dct["items"][i]["type"] == "hgroup") {
@@ -168,11 +171,10 @@ _f4u$t.json_to_ui = function(json) {
   else if (json["ui"][0]["type"] == "hgroup") {
     return _f4u$t.make_hgroup(json["ui"][0]);
   }
-  else if (json["ui"][0]["type"] == "tgroup" {
+  else if (json["ui"][0]["type"] == "tgroup") {
     return _f4u$t.make_tgroup(json["ui"][0]);
   }
   else {
     console.log("UFO: Unidentified Faust Object");
   }
 }
-
