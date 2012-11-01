@@ -1331,7 +1331,7 @@ _FAUST_NAMESPACE["load"] = function(svg) {
     $(window).width(),
     $(window).height(),
     {
-      constrain : true,
+      constrain : false,
       title : json["name"],
       lm : _FAUST_NAMESPACE["json_to_ui"](json)
     }
