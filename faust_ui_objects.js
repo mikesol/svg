@@ -18,8 +18,13 @@ _f4u$t.UIObject.prototype.make_group = function(svg, id, onload, onload_params) 
     });
 
   if (onload) {
-    out.bind('onload', onload_params, onload);
+    out.configure(
+      {
+        onLoad : function() { onload(onload_params) }
+      },
+      true);
   }
+
   return out;
 }
 
@@ -55,10 +60,11 @@ _f4u$t.IncrementalObject.prototype.make_value_box = function(svg, id, mousedown,
     {
       id: 'faust_value_box_'+id,
       transform: 'translate(0,'+(this.internal_dims()[1] + this.box_padding)+')',
-      style: 'fill:white;stroke:black;'
+      style: 'fill:white;stroke:black;',
+      onMouseDown : function() { mousedown(mousedown_params) }
     }
   );
-  vb.bind('mousedown', mousedown_params, mousedown);
+  
   return vb;
 }
 
@@ -66,15 +72,13 @@ _f4u$t.IncrementalObject.prototype.make_value_value = function(svg, id, mousedow
   var vv = svg.text(
     0,
     0,
-    this.def,
+    this.def.toString(),
     {
       id: 'faust_value_value_'+id,
       transform: 'translate('+this.box_padding+','+(this.internal_dims()[1] + this.lpadding_y)+')',
-      style: 'fill:white;stroke:black;'
+      onMouseDown : function() { mousedown(mousedown_params) }
     }
   );
-  vv.bind('mousedown', mousedown_params, mousedown);
-
   return vv;
 }
 
@@ -85,8 +89,7 @@ _f4u$t.IncrementalObject.prototype.make_label = function(svg, id) {
     this.label,
     {
       id: 'faust_label_'+id,
-      transform: 'translate(0,'+(this.internal_dims()[1] + this.lpadding_y + this.lpadding_y)+')',
-      style: 'fill:white;stroke:black;'
+      transform: 'translate(0,'+(this.internal_dims()[1] + this.lpadding_y + this.lpadding_y)+')'
     }
   );
   return vl;
@@ -186,7 +189,7 @@ _f4u$t.RotatingButton.prototype.make_joint = function(svg, id) {
   var origin = _f4u$t.coord_sub([0,0], trans);
   var small = this.sweep < 180;
   var d = "M{0} {1}L{2} {3} A{4} {4} {5} 1 {6} {7}L{0} {1}";
-  d.format([
+  d = d.format([
     origin[0], origin[1],
     start[0], start[1],
     this.r(),
@@ -216,7 +219,7 @@ _f4u$t.RotatingButton.prototype.make_knob = function(svg, id) {
   var small = this.sweep * this.sp < 180;
   var full_id = 'faust_rbutton_knob_'+id;
   var d = "M{0} {1}L{2} {3} A{4} {4} {5} 1 {6} {7}L{0} {1}";
-  d.format([
+  d = d.format([
     origin[0], origin[1],
     start[0], start[1],
     this.r(),
@@ -229,34 +232,26 @@ _f4u$t.RotatingButton.prototype.make_knob = function(svg, id) {
     {
       style : "fill:grey;stroke:black;",
       id : full_id,
-      transform : 'translate(0,0) scale(1,1) rotate('+(startp - half_slider_angle + 180)+','+origin[0]+','+origin[1]+')'
+      transform : 'translate(0,0) scale(1,1) rotate('+(startp - half_slider_angle + 180)+','+origin[0]+','+origin[1]+')',
+      onLoad : function() {
+        _f4u$t.initiate_rbutton(
+          full_id,
+          this.a0 + 180,
+          this.sweep,
+          this.sp,
+          origin[0],
+          origin[1],
+          this.get_x_offset(),
+          this.get_y_offset(),
+          this.mn,
+          this.mx,
+          this.step,
+          this.label,
+          this.address
+        );
+      },
+      onMouseDown : function() { _f4u$t.activate_rbutton(id); }
     }
-  );
-  
-  knob.bind(
-    'load',
-    {
-      id : full_id,
-      a0 : this.a0 + 180,
-      sweep : this.sweep,
-      sp : this.sp,
-      rx : origin[0],
-      ry : origin[1],
-      ox : this.get_x_offset(),
-      oy : this.get_y_offset(),
-      mn : this.mn,
-      mx : this.mx,
-      step : this.step,
-      label : this.label,
-      address : this.address
-    },
-    _f4u$t.initiate_rbutton
-  );
-
-  knob.bind(
-    'mousedown',
-    { id : full_id },
-    _f4u$t.activate_rbutton
   );
   
   return knob;
@@ -266,11 +261,11 @@ _f4u$t.RotatingButton.prototype.make = function(svg) {
   var id = _f4u$t.randString();
   var g = this.make_group(svg, id);
 
-  g.add(this.make_joint(svg, id));
-  g.add(this.make_knob(svg, id));
-  g.add(this.make_value_box(svg, id, _f4u$t.rotating_button_key_sink, {id : this.id}));
-  g.add(this.make_value_value(svg, id, _f4u$t.rotating_button_key_sink, {id : this.id}));
-  g.add(this.make_label(svg, id));
+  svg.add(g, this.make_joint(svg, id));
+  svg.add(g, this.make_knob(svg, id));
+  svg.add(g, this.make_value_box(svg, id, _f4u$t.rotating_button_key_sink, {id : this.id}));
+  svg.add(g, this.make_value_value(svg, id, _f4u$t.rotating_button_key_sink, {id : this.id}));
+  svg.add(g, this.make_label(svg, id));
 
   return g;
 }
@@ -368,29 +363,23 @@ _f4u$t.Slider.prototype.make_knob = function(svg, id) {
     {
       id : full_id,
       style : "fill:grey;stroke:black;",
-      transform : 'translate('+x+','+y+')'
+      transform : 'translate('+x+','+y+')',
+      onLoad : function() {
+        _f4u$t['initiate_'+this.type](
+          full_id,
+          this.sa(),
+          this.sp,
+          this.mn,
+          this.mx,
+          this.step,
+          this.label,
+          this.address
+        )
+      },
+      onMouseDown : function() {
+        _f4u$t['activate_'+this.type](full_id);
+      }
     }
-  );
-
-  knob.bind(
-    'load',
-    {
-      id : full_id,
-      sa : this.sa(),
-      sp : this.sp,
-      mn : this.mn,
-      mx : this.mx,
-      step : this.step,
-      label : this.label,
-      address : this.address
-    },
-    _f4u$t['initiate_'+this.type]
-  );
-
-  knob.bind(
-    'mousedown',
-    { id : full_id },
-    _f4u$t['activate_'+this.type]
   );
   
   return knob;
@@ -399,21 +388,21 @@ _f4u$t.Slider.prototype.make_knob = function(svg, id) {
 _f4u$t.Slider.prototype.make = function(svg) {
   var id = _f4u$t.randString();
   var g = this.make_group(svg, id);
-  g.add(this.make_joint(svg, id));
-  g.add(this.make_knob(svg, id));
-  g.add(this.make_value_box(
+  svg.add(g, this.make_joint(svg, id));
+  svg.add(g, this.make_knob(svg, id));
+  svg.add(g, this.make_value_box(
     svg,
     id,
     _f4u$t[this.type+'_key_sink'],
     {id : this.id}
   ));
-  g.add(this.make_value_value(
+  svg.add(g, this.make_value_value(
     svg,
     id,
     _f4u$t[this.type+'_key_sink'],
     {id : this.id}
   ));
-  g.add(this.make_label(svg, id));
+  svg.add(g, this.make_label(svg, id));
   return g;
 }
 
@@ -452,25 +441,17 @@ _f4u$t.extend(_f4u$t.SlidingObject, _f4u$t.BarGraph);
 _f4u$t.BarGraph.prototype.make_meter = function(svg, id) {
   var full_id = 'faust_'+this.type+'_meter_'+id;
   def = _f4u$t.remap(this.def, this.mn, this.mx, 0, this.sa())
-  var w = _f4u$t.xy(self.o, def, self.wa());
-  var h = _f4u$t.xy(self.o, self.wa(), def);
+  var w = _f4u$t.xy(this.o, def, this.wa());
+  var h = _f4u$t.xy(this.o, this.wa(), def);
   var meter = svg.path(
     "M0 0L"+w+" 0L"+w+" "+h+"L0 "+h+"L0 0",
     {
       id : full_id,
-      style : "fill:grey;stroke:black;"
+      style : "fill:grey;stroke:black;",
+      onLoad : function () { _f4u$t['initiate_'+this.type](full_id, this.address); }
     }
   );
 
-  meter.bind(
-    'load',
-    {
-      id : full_id,
-      address : this.address
-    },
-    _f4u$t['initiate_'+this.type]
-  );
-  
   return meter;
 }
 
@@ -478,11 +459,11 @@ _f4u$t.BarGraph.prototype.make = function(svg) {
   var id = _f4u$t.randString();
   var g = this.make_group(svg, id);
 
-  g.add(this.make_joint(svg, id));
-  g.add(this.make_meter(svg, id));
-  g.add(this.make_value_box(svg, id));
-  g.add(this.make_value_value(svg, id));
-  g.add(this.make_label(svg, id));
+  svg.add(g, this.make_joint(svg, id));
+  svg.add(g, this.make_meter(svg, id));
+  svg.add(g, this.make_value_box(svg, id));
+  svg.add(g, this.make_value_value(svg, id));
+  svg.add(g, this.make_label(svg, id));
 
   return g;
 }
@@ -531,7 +512,7 @@ _f4u$t.extend(_f4u$t.UIObject, _f4u$t.CheckBox);
 _f4u$t.CheckBox.prototype.compress = function() {}
 
 _f4u$t.CheckBox.prototype.internal_dims = function() {
-  return [self.d, self.d];
+  return [this.d, this.d];
 }
 
 _f4u$t.CheckBox.prototype.dims = function() {
@@ -548,25 +529,12 @@ _f4u$t.CheckBox.prototype.make_box = function(svg, id) {
     "M0 0L"+w+" 0L"+w+" "+h+"L0 "+h+"L0 0",
     {
       id : full_id,
-      style : "fill:white;stroke:black;"
+      style : "fill:white;stroke:black;",
+      onLoad : function () { _f4u$t.initiate_checkbox(full_id, this.address) },
+      onMouseDown : function () { _f4u$t.change_checkbox(full_id) }
     }
   );
 
-  box.bind(
-    'load',
-    {
-      id : full_id,
-      address : this.address
-    },
-    _f4u$t.initiate_checkbox
-  );
-
-  box.bind(
-    'mousedown',
-    { id : full_id },
-    _f4u$t.change_checkbox
-  );
-  
   return box;
 }
 
@@ -580,25 +548,12 @@ _f4u$t.CheckBox.prototype.make_check = function(svg, id) {
     {
       id : full_id,
       transform : "scale("+scale+","+scale+") translate(-1.0896806, -4.3926201)",
-      style : "fill:"+_f4u$t.color_to_rgb(this.fill)+";opacity:"+(this.def == 1 ? 1.0 : 0.0)+";"
+      style : "fill:"+_f4u$t.color_to_rgb(this.fill)+";opacity:"+(this.def == 1 ? 1.0 : 0.0)+";",
+      onLoad : function () { _f4u$t.initiate_checkbox(full_id, this.address) },
+      onMouseDown : function () { _f4u$t.change_checkbox(full_id) }
     }
   );
 
-  box.bind(
-    'load',
-    {
-      id : full_id,
-      address : this.address
-    },
-    _f4u$t.initiate_checkbox
-  );
-
-  box.bind(
-    'mousedown',
-    { id : full_id },
-    _f4u$t.change_checkbox
-  );
-  
   return box;
 }
 
@@ -609,8 +564,7 @@ _f4u$t.CheckBox.prototype.make_label = function(svg, id) {
     this.label,
     {
       id: 'faust_label_'+id,
-      transform: 'translate(0,'+(this.internal_dims()[1] + this.lpadding_y)+')',
-      style: 'fill:white;stroke:black;'
+      transform: 'translate(0,'+(this.internal_dims()[1] + this.lpadding_y)+')'
     }
   );
 
@@ -621,9 +575,9 @@ _f4u$t.CheckBox.prototype.make = function(svg) {
   var id = _f4u$t.randString();
   var g = this.make_group(svg, id);
 
-  g.add(this.make_box(svg, id));
-  g.add(this.make_check(svg, id));
-  g.add(this.make_label(svg, id));
+  svg.add(g, this.make_box(svg, id));
+  svg.add(g, this.make_check(svg, id));
+  svg.add(g, this.make_label(svg, id));
 
   return g;
 }
@@ -633,7 +587,7 @@ _f4u$t.CheckBox.prototype.make = function(svg) {
 */
 
 _f4u$t.Button = function(options) {
-  this.mom = options.mom || None;
+  this.mom = options.mom || null;
   this.iw = options.iw || 80;
   this.ih = options.ih || 40;
   this.mw = options.mw || 40;
@@ -664,45 +618,32 @@ _f4u$t.Button.prototype.compress = function(coef) {
 }
 
 _f4u$t.Button.prototype.dims = function(coef) {
-  return [self.w(), self.h()];
+  return [this.w(), this.h()];
 }
 
 _f4u$t.Button.prototype.make_button_button = function(svg, id) {
   var full_id = 'faust_buttoon_button_'+id;
   var rf = 10;
   var d = "M{0} 0L{1} 0C{2} 0 {2} 0 {2} {3}L{2} {4}C{2} {5} {2} {5} {1} {5}L{0} {5}C0 {5} 0 {5} 0 {4}L0 {3}C0 0 0 0 {0} 0";
-  d.format([rf, this.w() - rf, this.w(), rf, this.h() - rf, this.h()]);
+  d = d.format([rf, this.w() - rf, this.w(), rf, this.h() - rf, this.h()]);
   var button = svg.path(
     d,
     {
       id : full_id,
-      style : "fill:"+_f4u$t.color_to_rgb(this.fillOff)+";"
+      style : "fill:"+_f4u$t.color_to_rgb(this.fillOff)+";",
+      onLoad : function() {
+        _f4u$t.initiate_button(
+          full_id,
+          _f4u$t.color_to_rgb(this.fillOff),
+          _f4u$t.color_to_rgb(this.fillOn),
+          this.address
+        )
+      },
+      onMouseDown : function() { _f4u$t.button_down(full_id); },
+      onMouseUp : function() { _f4u$t.button_up(full_id); }
     }
   );
 
-  button.bind(
-    'load',
-    {
-      fillOff : _f4u$t.color_to_rgb(this.fillOff),
-      fillOn : _f4u$t.color_to_rgb(this.fillOn),
-      id : full_id,
-      address : this.address,
-    },
-    _f4u$t.initiate_button
-  );
-
-  button.bind(
-    'mousedown',
-    { id : full_id },
-    _f4u$t.button_down
-  );
-
-  button.bind(
-    'mouseup',
-    { id : full_id },
-    _f4u$t.button_up
-  );
-  
   return button;
 }
 
@@ -716,22 +657,11 @@ _f4u$t.Button.prototype.make_label = function(svg, id) {
       "text-anchor" : 'middle',
       id: 'faust_label_'+id,
       transform: 'translate('+(this.w() / 2.0)+','+(this.h() / 2.0 + this.baselineSkip)+')',
-      style: 'fill:white;stroke:black;'
+      onMouseDown : function() { _f4u$t.button_down(full_id); },
+      onMouseUp : function() { _f4u$t.button_up(full_id); }
     }
   );
   
-  vi.bind(
-    'mousedown',
-    { id : full_id },
-    _f4u$t.button_down
-  );
-
-  vi.bind(
-    'mouseup',
-    { id : full_id },
-    _f4u$t.button_up
-  );
-
   return vl;
 }
 
@@ -739,8 +669,8 @@ _f4u$t.Button.prototype.make = function(svg) {
   var id = _f4u$t.randString();
   var g = this.make_group(svg, id);
 
-  g.add(this.make_button_button(svg, id));
-  g.add(this.make_label(svg, id));
+  svg.add(g, this.make_button_button(svg, id));
+  svg.add(g, this.make_label(svg, id));
 
   return g;
 }
@@ -814,20 +744,11 @@ _f4u$t.NumericalEntry.prototype.make_button = function(svg, id, xo, incr) {
     {
       transform : 'translate('+xo+',0)',
       id : full_id,
-      style : "fill:grey;"
+      style : "fill:grey;",
+      mouseDown : function() { _f4u$t.activate_nentry(full_id, incr); }
     }
   );
 
-
-  button.bind(
-    'mousedown',
-    {
-      id : full_id,
-      incr : incr
-    },
-    _f4u$t.activate_nentry
-  );
-  
   return button;
 }
 
@@ -842,20 +763,11 @@ _f4u$t.NumericalEntry.prototype.make_minus = function(svg, id) {
     d,
     {
       id : full_id,
-      style: 'stroke:black;'
+      style: 'stroke:black;',
+      mouseDown : function() { _f4u$t.activate_nentry(full_id, false); }
     }
   );
 
-
-  minus.bind(
-    'mousedown',
-    {
-      id : full_id,
-      incr : false
-    },
-    _f4u$t.activate_nentry
-  );
-  
   return minus;
 }
 
@@ -869,26 +781,17 @@ _f4u$t.NumericalEntry.prototype.make_plus = function(svg, id) {
   var y11 = this.h() * 3.0 / 4.0;
   
   var d = "M{0} {1}L{2} {1}M{3} {4}L{3} {5}";
-  d.format([x00, y0, x01, x1, y10, y11]);
+  d = d.format([x00, y0, x01, x1, y10, y11]);
   var plus = svg.path(
     d,
     {
       transform : 'translate('+(this.w() / 2.0 + this.padding)+',0)',
       id : full_id,
-      style: 'stroke:black;'
+      style: 'stroke:black;',
+      mouseDown : function() { _f4u$t.activate_nentry(full_id, true); }
     }
   );
 
-
-  plus.bind(
-    'mousedown',
-    {
-      id : full_id,
-      incr : true
-    },
-    _f4u$t.activate_nentry
-  );
-  
   return plus;
 }
 
@@ -909,13 +812,13 @@ _f4u$t.NumericalEntry.prototype.make = function(svg) {
     }
   );
 
-  g.add(this.make_left_button(svg, id));
-  g.add(this.make_right_button(svg, id));
-  g.add(this.make_minus(svg, id));
-  g.add(this.make_plus(svg, id));
-  g.add(this.make_value_box(svg, id, _f4u$t.nentry_key_sink, { id : id }));
-  g.add(this.make_value_value(svg, id, _f4u$t.nentry_key_sink, { id : id }));
-  g.add(this.make_label(svg, id));
+  svg.add(g, this.make_left_button(svg, id));
+  svg.add(g, this.make_right_button(svg, id));
+  svg.add(g, this.make_minus(svg, id));
+  svg.add(g, this.make_plus(svg, id));
+  svg.add(g, this.make_value_box(svg, id, _f4u$t.nentry_key_sink, { id : id }));
+  svg.add(g, this.make_value_value(svg, id, _f4u$t.nentry_key_sink, { id : id }));
+  svg.add(g, this.make_label(svg, id));
 
   return g;
 }
@@ -942,13 +845,15 @@ _f4u$t.LayoutManager = function(options) {
 _f4u$t.extend(_f4u$t.UIObject, _f4u$t.LayoutManager);
 
 _f4u$t.LayoutManager.prototype.internal_dims = function() {
-  out = [[],[]];
-
+  outx = [];
+  outy = [];
   for (var i = 0; i < this.objs.length; i++) {
     var dim = this.objs[i].dims();
-    out[_f4u$t.X_AXIS].push(dim[_f4u$t.X_AXIS]);
-    out[_f4u$t.Y_AXIS].push(dim[_f4u$t.Y_AXIS]);
+    outx.push(dim[_f4u$t.X_AXIS]);
+    outy.push(dim[_f4u$t.Y_AXIS]);
   }
+
+  var out = [outx,outy];
 
   for (var i = _f4u$t.X_AXIS; i < _f4u$t.NO_AXES; i++) {
     out[i] = (i == this.o ? out[i].sum() : out[i].max());
@@ -970,7 +875,7 @@ _f4u$t.LayoutManager.prototype.populate_objects = function() {
 }
 
 _f4u$t.LayoutManager.prototype.dims = function() {
-  var ugh = self.internal_dims();
+  var ugh = this.internal_dims();
   var out = [ugh[0], ugh[1] + Math.max(this.lpadding_y, this.padding) + this.padding + _f4u$t.TEXT_PADDING];
   return out;
 }
@@ -1001,12 +906,12 @@ _f4u$t.LayoutManager.prototype.get_real_points = function(x, y) {
   }
   // we want to account for padding for Y coordinates...
   rp.sort(function(a,b){return a[1] - b[1]});
-  rp.push([rp[-1][0], rp[-1][1] + Math.max(this.lpadding_y, this.padding)]);
+  rp.push([rp[rp.length - 1][0], rp[rp.length - 1][1] + Math.max(this.lpadding_y, this.padding)]);
   rp.push([rp[0][0], rp[0][1] - this.padding]);
   // and now X coordinates...
   rp.sort(function(a,b){return a[0] - b[0]});
-  rp.append([rp[-1][0] + this.padding, rp[-1][1]]);
-  rp.append([rp[0][0] - this.padding, rp[0][1]]);
+  rp.push([rp[rp.length - 1][0] + this.padding, rp[rp.length - 1][1]]);
+  rp.push([rp[0][0] - this.padding, rp[0][1]]);
   return rp;
 }
 
@@ -1039,7 +944,7 @@ _f4u$t.LayoutManager.prototype.do_spacing = function(x, y) {
   var padding = this.padding * ratio;
   // the first padding will need to account for any additional space, thus
   // the call to jvalue with the leftover
-  // use self.gravity, as object gravities will be used internally
+  // use this.gravity, as object gravities will be used internally
   var running_count = padding + _f4u$t.jvalue(leftover[this.o], _f4u$t.LEFT, this.gravity[this.o]);
   for (var i = 0; i < this.objs.length; i++) {
     var obj = this.objs[i];
@@ -1113,12 +1018,13 @@ _f4u$t.LayoutManager.prototype.make_background = function(svg) {
 }
 
 _f4u$t.LayoutManager.prototype.make = function(svg) {
-  var g = this.make_group(svg, self.id);
+  var g = this.make_group(svg, this.id);
 
-  g.add(this.make_background(svg));
-  g.add(this.make_label(svg));
+  svg.add(g, this.make_background(svg));
+  svg.add(g, this.make_label(svg));
+  
   for (var i = 0; i < this.objs.length; i++) {
-    g.add(this.objs[i].make(svg));
+    svg.add(g, this.objs[i].make(svg));
   }
   
   return g;
@@ -1178,7 +1084,7 @@ _f4u$t.TabGroup.prototype.dims = function() {
     x = Math.max(x, dim[0]);
     y = Math.max(y, dim[1]);
   }
-  return [x, y + self.headroom];
+  return [x, y + this.headroom];
 }
 
 _f4u$t.TabGroup.prototype.do_spacing = function(x,y) {
@@ -1196,19 +1102,16 @@ _f4u$t.TabGroup.prototype.make_label = function(svg, x, y, l, goodid, badidstr) 
     l,
     {
       "text-anchor" : 'middle',
-      transform: 'translate('+x+','+y+')'
+      transform : 'translate('+x+','+y+')',
+      onMouseDown : function() {
+        _f4u$t.shuffletabs(
+          this.x,
+          this.y + this.headroom,
+          goodid,
+          badidstr
+        );
+      }
     }
-  );
-  
-  vl.bind(
-    'mousedown',
-    {
-      goodid : goodid,
-      badidstr : badidstr,
-      x : this.x,
-      y : this.y + this.headroom
-    },
-    _f4u$t.shuffletabs
   );
   
   return vl;
@@ -1219,19 +1122,16 @@ _f4u$t.TabGroup.prototype.make_tab = function(svg, w, h, x, y, goodid, badidstr,
     "M 0 0L"+w+" 0L"+w+" "+h+"L0 "+h+"L0 0",
     {
       transform: 'translate('+x+','+y+')',
-      style: 'fill:'+_f4u$t.color_to_rgb(fill)+';stroke:black;'
+      style: 'fill:'+_f4u$t.color_to_rgb(fill)+';stroke:black;',
+      onMouseDown : function() {
+        _f4u$t.shuffletabs(
+          this.x,
+          this.y + this.headroom,
+          goodid,
+          badidstr
+        );
+      }
     }
-  );
-  
-  tab.bind(
-    'mousedown',
-    {
-      goodid : goodid,
-      badidstr : badidstr,
-      x : this.x,
-      y : this.y + this.headroom
-    },
-    _f4u$t.shuffletabs
   );
   
   return tab;
@@ -1244,7 +1144,7 @@ _f4u$t.TabGroup.prototype.make_tabs = function(svg) {
   var running_count = 0;
   for (var i = 0; i < this.objs.length; i++) {
     var badidstr = this.objs.filter(function(obj) {obj != this.objs[i]}).map(function(obj) {return obj.id;}).join('#');
-    g.add(this.make_tab_svg(
+    svg.add(g, this.make_tab_svg(
       this.x_width,
       this.headroom,
       running_count,
@@ -1252,7 +1152,7 @@ _f4u$t.TabGroup.prototype.make_tabs = function(svg) {
       this.objs[i].id,
       badidstr,
       this.objs[i].fill));
-    g.add(this.make_label_svg(
+    svg.add(g, this.make_label_svg(
       running_count + this.x_width / 2.0,
       this.headroom / 2.0 + this.baselineSkip,
       this.objs[i].label,
@@ -1268,7 +1168,7 @@ _f4u$t.TabGroup.prototype.make_tabs = function(svg) {
 _f4u$t.TabGroup.prototype.make = function(svg) {
   var g = this.make_group(
     svg,
-    self.id,
+    this.id,
     _f4u$t.cache_tab_group,
     {
       def : this.def,
@@ -1276,9 +1176,9 @@ _f4u$t.TabGroup.prototype.make = function(svg) {
     }
   );
 
-  g.add(this.make_tabs(svg));
+  svg.add(g, this.make_tabs(svg));
   for (var i = 0; i < this.objs.length; i++) {
-    g.add(this.objs[i].make(svg));
+    svg.add(g, this.objs[i].make(svg));
   }
 
   return g;
@@ -1306,7 +1206,7 @@ _f4u$t.SVG.prototype.get_y_offset = function() {
 }
 
 _f4u$t.SVG.prototype.make = function() {
-  if (!self.constrain) {
+  if (!this.constrain) {
     var dims = this.lm.dims();
     this.svg.configure(
       {

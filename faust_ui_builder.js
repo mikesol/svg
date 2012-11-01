@@ -97,13 +97,11 @@ _f4u$t.make_vgroup = function(dct) {
 }
 
 _f4u$t.make_group = function(axis, dct) {
-console.log('ok');
   var lm = new _f4u$t.LayoutManager({
     o : axis,
     label : dct["label"]
   });
-console.log(lm);
-console.log('not ok');
+
   for (var i = 0; i < dct["items"].length; i++) {
     if (dct["items"][i]["type"] == "hgroup") {
       lm.objs.push(_f4u$t.make_hgroup(dct["items"][i]));

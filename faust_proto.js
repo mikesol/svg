@@ -158,8 +158,8 @@ _f4u$t.Box.prototype.add_points = function(pts) {
 }
 
 _f4u$t.Box.prototype.add_point = function(pt) {
-  this.x = [min(this.x[0], pt[0]), max(this.x[1], pt[0])];
-  this.y = [min(this.y[0], pt[1]), max(this.y[1], pt[1])];
+  this.x = [Math.min(this.x[0], pt[0]), Math.max(this.x[1], pt[0])];
+  this.y = [Math.min(this.y[0], pt[1]), Math.max(this.y[1], pt[1])];
 }
 
 _f4u$t.Box.prototype.lens = function(pt) {
