@@ -164,7 +164,7 @@ _f4u$t.RotatingButton.prototype.internal_dims = function() {
 
 _f4u$t.RotatingButton.prototype.dims = function() {
   var ugh = this.internal_dims();
-  return [max(ugh[0], this.value_box_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
+  return [Math.max(ugh[0], this.value_box_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
 }
 
 _f4u$t.RotatingButton.prototype.get_translation = function() {
@@ -231,7 +231,7 @@ _f4u$t.RotatingButton.prototype.make_knob = function(svg, parent, id) {
       style : "fill:grey;stroke:black;",
       id : full_id,
       transform : 'translate(0,0) scale(1,1) rotate('+(startp - half_slider_angle + 180)+','+origin[0]+','+origin[1]+')',
-      onmousedown : '_f4u$t.activate_rbutton({0})'.format(full_id)
+      onmousedown : '_f4u$t.activate_rbutton("'+full_id+'")'
     }
   );
   
@@ -244,7 +244,7 @@ _f4u$t.RotatingButton.prototype.make = function(svg, parent) {
   var trans = this.get_translation();
   var origin = _f4u$t.coord_sub([0,0], trans);
   _f4u$t.initiate_rbutton(
-    full_id,
+    id,
     this.a0 + 180,
     this.sweep,
     this.sp,
@@ -725,7 +725,7 @@ _f4u$t.NumericalEntry.prototype.internal_dims = function() {
 }
 
 _f4u$t.NumericalEntry.prototype.dims = function() {
-  var ugh = this.internal_dims;
+  var ugh = this.internal_dims();
   ugh = [Math.max(ugh[0], this.value_box_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
   return ugh;
 }
@@ -1025,7 +1025,7 @@ _f4u$t.LayoutManager.prototype.make = function(svg, parent) {
   for (var i = 0; i < this.objs.length; i++) {
     this.objs[i].make(svg, g);
   }
-  
+
   return g;
 }
 
@@ -1065,7 +1065,7 @@ _f4u$t.TabGroup.prototype.setY = function(y) {
   }
 }
 
-_f4u$t.LayoutManager.prototype.populate_objects = function() {
+_f4u$t.TabGroup.prototype.populate_objects = function() {
   for (var i = 0; i < this.objs.length; i++) {
     this.objs[i].mom = this;
     if ((this.objs[i] instanceof _f4u$t.LayoutManager)
@@ -1103,14 +1103,7 @@ _f4u$t.TabGroup.prototype.make_label = function(svg, parent, x, y, l, goodid, ba
     {
       "text-anchor" : 'middle',
       transform : 'translate('+x+','+y+')',
-      onmousedown : function() {
-        _f4u$t.shuffletabs(
-          this.x,
-          this.y + this.headroom,
-          goodid,
-          badidstr
-        );
-      }
+      onmousedown : '_f4u$t.shuffletabs('+this.x+','+(this.y + this.headroom)+',"'+goodid+'","'+badidstr+'")'
     }
   );
   
@@ -1124,14 +1117,7 @@ _f4u$t.TabGroup.prototype.make_tab = function(svg, parent, w, h, x, y, goodid, b
     {
       transform: 'translate('+x+','+y+')',
       style: 'fill:'+_f4u$t.color_to_rgb(fill)+';stroke:black;',
-      onmousedown : function() {
-        _f4u$t.shuffletabs(
-          this.x,
-          this.y + this.headroom,
-          goodid,
-          badidstr
-        );
-      }
+      onmousedown : '_f4u$t.shuffletabs('+this.x+','+(this.y + this.headroom)+',"'+goodid+'","'+badidstr+'")'
     }
   );
   
@@ -1144,24 +1130,25 @@ _f4u$t.TabGroup.prototype.make_tabs = function(svg, parent) {
 
   var running_count = 0;
   for (var i = 0; i < this.objs.length; i++) {
-    var badidstr = this.objs.filter(function(obj) {obj != this.objs[i]}).map(function(obj) {return obj.id;}).join('#');
-    this.make_tab_svg(
+    var curobj = this.objs[i];
+    var badidstr = this.objs.filter(function(obj) {return obj != curobj}).map(function(obj) {return obj.id;}).join('#');
+    this.make_tab(
       svg,
       parent,
       this.x_width,
       this.headroom,
       running_count,
       0,
-      this.objs[i].id,
+      curobj.id,
       badidstr,
-      this.objs[i].fill);
-    this.make_label_svg(
+      curobj.fill);
+    this.make_label(
       svg,
       parent,
       running_count + this.x_width / 2.0,
       this.headroom / 2.0 + this.baselineSkip,
-      this.objs[i].label,
-      this.objs[i].id,
+      curobj.label,
+      curobj.id,
       badidstr);
     running_count += this.x_width + this.x_padding;
   }
@@ -1170,21 +1157,13 @@ _f4u$t.TabGroup.prototype.make_tabs = function(svg, parent) {
 }
 
 _f4u$t.TabGroup.prototype.make = function(svg, parent) {
-  var g = this.make_group(
-    svg,
-    parent,
-    this.id,
-    _f4u$t.cache_tab_group,
-    {
-      def : this.def,
-      ids : this.objs.map(function(obj) {return obj.id;}).join('#')
-    }
-  );
-
+  var g = this.make_group(svg, parent, this.id);
   this.make_tabs(svg, g);
   for (var i = 0; i < this.objs.length; i++) {
     this.objs[i].make(svg, g);
   }
+  // call initiate_tab_group after objects are created
+  _f4u$t.initiate_tab_group(this.def, this.objs.map(function(obj) {return obj.id;}).join('#'));
 
   return g;
 }
@@ -1216,7 +1195,9 @@ _f4u$t.SVG.prototype.make = function() {
     this.svg.configure(
       {
         // kludge for viewbox...not sure why this extra space is necessary
-        viewBox: '-20 -20 '+(dims[0] + 100)+' '+(dims[1] + 100),
+        //viewBox: '-20 -20 '+(dims[0] + 100)+' '+(dims[1] + 100),
+        //viewBox: '-20 -20 '+(dims[0] - 400)+' '+(dims[1] - 400),
+        viewBox: '0 0 '+dims[0]+' '+dims[1],
         width : this.w+'px',
         height: this.h+'px'
       },

@@ -13,7 +13,7 @@ _f4u$t._N = 0; // id of the key sink
  * SERVER INTERACTION
  */
 
-_f4u$t.PATHS_TO_IDS = new Array();
+_f4u$t.PATHS_TO_IDS = {};
 
 /*
  * OBJECT ORIENTED PROGRAMMING
@@ -24,7 +24,7 @@ _f4u$t.PATHS_TO_IDS = new Array();
  * as the objects is minimal.
  */
 
-_f4u$t.IDS_TO_ATTRIBUTES = new Array();
+_f4u$t.IDS_TO_ATTRIBUTES = {};
 
 _f4u$t.PREV = new Array();
 _f4u$t.PREV[_f4u$t.X_AXIS] = _f4u$t.NETHERWORLD;
@@ -296,7 +296,7 @@ _f4u$t.initiate_slider = function(A, I, T, P, MN, MX, S, L, AD) {
   }
   */
   var id = _f4u$t.unique(I);
-  _f4u$t.IDS_TO_ATTRIBUTES[id] = new Array();
+  _f4u$t.IDS_TO_ATTRIBUTES[id] = {};
   _f4u$t.IDS_TO_ATTRIBUTES[id]["I"] = I;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["A"] = A;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["T"] = T;
@@ -317,7 +317,7 @@ _f4u$t.initiate_nentry = function(I, MN, MX, S, D, L, AD) {
   }
   */
   var id = _f4u$t.unique(I);
-  _f4u$t.IDS_TO_ATTRIBUTES[id] = new Array();
+  _f4u$t.IDS_TO_ATTRIBUTES[id] = {};
   _f4u$t.IDS_TO_ATTRIBUTES[id]["I"] = I;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["MN"] = MN;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["MX"] = MX;
@@ -334,6 +334,24 @@ _f4u$t.initiate_hslider = function(I, T, P, MN, MX, S, L, AD) {
 
 _f4u$t.initiate_vslider = function(I, T, P, MN, MX, S, L, AD) {
   _f4u$t.initiate_slider(_f4u$t.Y_AXIS, I, T, P,MN, MX, S, L, AD);
+}
+
+_f4u$t.initiate_bargraph = function(I, AD) {
+  // in case we haven't initialized things yet
+  /*
+  if (_f4u$t.PREV[_f4u$t.X_AXIS] == _f4u$t.NETHERWORLD) {
+    _f4u$t.updateXY(e);
+  }
+  */
+  _f4u$t.path_to_id(AD, I);
+}
+
+_f4u$t.initiate_hbargraph = function(I, AD) {
+  _f4u$t.initiate_bargraph(I, AD);
+}
+
+_f4u$t.initiate_vbargraph = function(I, AD) {
+  _f4u$t.initiate_bargraph(I, AD);
 }
 
 _f4u$t.activate_slider = function(I) {
@@ -385,7 +403,7 @@ _f4u$t.initiate_rbutton = function(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S,L,AD) {
   }
   */
   var id = _f4u$t.unique(I);
-  _f4u$t.IDS_TO_ATTRIBUTES[id] = new Array();
+  _f4u$t.IDS_TO_ATTRIBUTES[id] = {};
   _f4u$t.IDS_TO_ATTRIBUTES[id]["I"] = I;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["A0"] = A0;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["SW"] = SW;
@@ -428,7 +446,7 @@ _f4u$t.button_down = function(I) {
 
 _f4u$t.initiate_button = function(I, UF, DF, AD) {
   var id = _f4u$t.unique(I);
-  _f4u$t.IDS_TO_ATTRIBUTES[id] = new Array();
+  _f4u$t.IDS_TO_ATTRIBUTES[id] = {};
   _f4u$t.IDS_TO_ATTRIBUTES[id]["I"] = I;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["UF"] = UF;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["DF"] = DF;
@@ -457,7 +475,7 @@ _f4u$t.change_checkbox = function(I) {
 
 _f4u$t.initiate_checkbox = function(I, AD) {
   var id = _f4u$t.unique(I);
-  _f4u$t.IDS_TO_ATTRIBUTES[id] = new Array();
+  _f4u$t.IDS_TO_ATTRIBUTES[id] = {};
   _f4u$t.IDS_TO_ATTRIBUTES[id]["I"] = I;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["AD"] = AD;
   _f4u$t.path_to_id(AD, I);
@@ -614,7 +632,7 @@ _f4u$t.generic_translate = function(id, x, y) {
   elt.setAttribute("transform", movetothis);  
 }
 
-_f4u$t.cache_tab_group = function(index, ids) {
+_f4u$t.initiate_tab_group = function(index, ids) {
   var strar = ids.split('#');
   // boo svg...tags
   for (var i = 0; strar.length > i; i++) {
@@ -624,7 +642,7 @@ _f4u$t.cache_tab_group = function(index, ids) {
   }
 }
 
-_f4u$t.shuffletabs = function(goodid, badids, x, y) {
+_f4u$t.shuffletabs = function(x, y, goodid, badids) {
   var strar = badids.split('#');
   for (var i = 0; strar.length > i; i++) {
     _f4u$t.move_to_ridiculous_negative(strar[i]);

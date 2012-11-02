@@ -13,24 +13,8 @@
     </div>
     <script type="text/javascript">
       $('#faustsvg').svg({onLoad: function (svg) {
-        var raw_json = '{ "name": "karplus", "address": "Mike-Solomons-MacBook-Pro.local", "port": "5510", "ui": [ { "type": "vgroup", "label": "karplus", "items": [ { "type": "vgroup", "label": "excitator", "items": [ { "type": "hslider", "label": "excitation_(samples)", "address": "/karplus/excitator/excitation_(samples)", "init": "128", "min": "2", "max": "512", "step": "1" }, { "type": "button", "label": "play", "address": "/karplus/excitator/play" } ] }, { "type": "hslider", "label": "level", "address": "/karplus/level", "init": "0.5", "min": "0", "max": "1", "step": "0.1" }, { "type": "vgroup", "label": "resonator", "items": [ { "type": "hslider", "label": "attenuation", "address": "/karplus/resonator/attenuation", "init": "0.1", "min": "0", "max": "1", "step": "0.01" }, { "type": "hslider", "label": "duration_(samples)", "address": "/karplus/resonator/duration_(samples)", "init": "128", "min": "2", "max": "512", "step": "1" } ] } ] } ] }';
-        var json = eval ("(" + raw_json + ")");
-
-        var faust_svg = new _f4u$t.SVG(
-          svg,
-          $(window).width(),
-          $(window).height(),
-          {
-            constrain : false,
-            title : json["name"],
-            lm : _f4u$t.json_to_ui(json)
-          }
-        );
-
-        faust_svg.lm.mom = faust_svg;
-        faust_svg.make();      
-        }
-      });
+        _f4u$t.make_ui(svg, '{ "name": "karplus", "address": "Mike-Solomons-MacBook-Pro.local", "port": "5510", "ui": [ { "type": "vgroup", "label": "karplus", "items": [ { "type": "vgroup", "label": "excitator", "items": [ { "type": "hslider", "label": "excitation_(samples)", "address": "/karplus/excitator/excitation_(samples)", "init": "128", "min": "2", "max": "512", "step": "1" }, { "type": "button", "label": "play", "address": "/karplus/excitator/play" } ] }, { "type": "hslider", "label": "level", "address": "/karplus/level", "init": "0.5", "min": "0", "max": "1", "step": "0.1" }, { "type": "vgroup", "label": "resonator", "items": [ { "type": "hslider", "label": "attenuation", "address": "/karplus/resonator/attenuation", "init": "0.1", "min": "0", "max": "1", "step": "0.01" }, { "type": "hslider", "label": "duration_(samples)", "address": "/karplus/resonator/duration_(samples)", "init": "128", "min": "2", "max": "512", "step": "1" } ] } ] } ] }');
+      }});
     </script>
   </body>
 </html>

@@ -226,3 +226,22 @@ Array.prototype.sum = function() {
   }
   return sum;
 }
+
+// main
+_f4u$t.make_ui = function(svg, raw_json) {
+  var json = eval ("(" + raw_json + ")");
+
+  var faust_svg = new _f4u$t.SVG(
+    svg,
+    $(window).width(),
+    $(window).height(),
+    {
+      constrain : false,
+      title : json["name"],
+      lm : _f4u$t.json_to_ui(json)
+    }
+  );
+
+  faust_svg.lm.mom = faust_svg;
+  faust_svg.make();
+}
