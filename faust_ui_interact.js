@@ -324,22 +324,32 @@ _f4u$t.initiate_vslider = function(I, T, P, MN, MX, S, L, AD) {
   _f4u$t.initiate_slider(_f4u$t.Y_AXIS, I, T, P,MN, MX, S, L, AD);
 }
 
-_f4u$t.initiate_bargraph = function(I, AD) {
+_f4u$t.initiate_bargraph = function(A, I, WA, MN, MX, S, L, AD) {
   // in case we haven't initialized things yet
   /*
   if (_f4u$t.PREV[_f4u$t.X_AXIS] == _f4u$t.NETHERWORLD) {
     _f4u$t.updateXY(e);
   }
   */
+  var id = _f4u$t.unique(I);
+  _f4u$t.IDS_TO_ATTRIBUTES[id] = {};
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["type"] = (A == _f4u$t.X_AXIS ? "hbargraph" : "vbargraph");
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["A"] = A;
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["WA"] = WA;
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["MN"] = MN;
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["MX"] = MX;
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["S"] = S;
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["L"] = L;
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["AD"] = AD;
   _f4u$t.path_to_id(AD, I);
 }
 
-_f4u$t.initiate_hbargraph = function(I, AD) {
-  _f4u$t.initiate_bargraph(I, AD);
+_f4u$t.initiate_hbargraph = function(I, WA, MN, MX, S, L, AD) {
+  _f4u$t.initiate_bargraph(_f4u$t.X_AXIS, WA, I, MN, MX, S, L, AD);
 }
 
-_f4u$t.initiate_vbargraph = function(I, AD) {
-  _f4u$t.initiate_bargraph(I, AD);
+_f4u$t.initiate_vbargraph = function(I, WA, MN, MX, S, L, AD) {
+  _f4u$t.initiate_bargraph(_f4u$t.Y_AXIS, I, WA, MN, MX, S, L, AD);
 }
 
 _f4u$t.activate_slider = function(I) {
@@ -481,12 +491,18 @@ _f4u$t.actualize_incremental_object = function(id) {
   var hslider_id = "faust_hslider_knob_"+id;
   var vslider_id = "faust_vslider_knob_"+id;
   var rotating_button_id = "faust_rbutton_knob_"+id;
+  var hbargraph_id = "faust_hbargraph_knob_"+id;
+  var vbargraph_id = "faust_vbargraph_knob_"+id;
   var val = parseFloat(_f4u$t.IDS_TO_ATTRIBUTES[id]["B"]);
   var maybe_slider = document.getElementById(hslider_id);
   if (maybe_slider == null) {
     maybe_slider = document.getElementById(vslider_id);
   }
   var maybe_button = document.getElementById(rotating_button_id);
+  var maybe_bargraph = document.getElementById(hbargraph_id);
+  if (maybe_bargraph == null) {
+    maybe_bargraph = document.getElementById(vbargraph_id);
+  }
   if (maybe_slider != null) {
     // ugh...code dups
     var MN = _f4u$t.IDS_TO_ATTRIBUTES[id]["MN"];
@@ -512,6 +528,17 @@ _f4u$t.actualize_incremental_object = function(id) {
     transform[2][1] = val;
     var movetothis = _f4u$t.arrayToTransform(transform);
     maybe_button.setAttribute("transform", movetothis);
+    return 0;
+  }
+  else if (maybe_bargraph != null) {
+    // ugh...code dups
+    var MN = _f4u$t.IDS_TO_ATTRIBUTES[id]["MN"];
+    var MX = _f4u$t.IDS_TO_ATTRIBUTES[id]["MX"];
+    var A = _f4u$t.IDS_TO_ATTRIBUTES[id]["A"];
+    var WA = _f4u$t.IDS_TO_ATTRIBUTES[id]["WA"];
+    val = _f4u$t[_f4u$t.xy(A, "remap", "remap_and_flip")](val, MN, MX, 0, T - (T * P));
+    var newd = 'M 0 0L'+WA+' 0L'+WA+' '+val+'L0 '+val+'L0 0';
+    maybe_slider.setAttribute("d", newd);
     return 0;
   }
   // no corresponding incremental object

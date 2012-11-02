@@ -476,7 +476,15 @@ _f4u$t.BarGraph.prototype.make_meter = function(svg, parent, id) {
 _f4u$t.BarGraph.prototype.make = function(svg, parent) {
   var id = _f4u$t.randString();
   var g = this.make_group(svg, parent, id);
-  _f4u$t['initiate_'+this.type](id, this.address);
+  _f4u$t['initiate_'+this.type](
+    id,
+    this.wa,
+    this.mn,
+    this.mx,
+    this.step,
+    this.label,
+    this.address
+  );
 
   this.make_joint(svg, g, id);
   this.make_meter(svg, g, id);
