@@ -1104,7 +1104,7 @@ _f4u$t.TabGroup.prototype.viewport_dims = function() {
     x = Math.max(x, dim[0]);
     y = Math.max(y, dim[1]);
   }
-  return [x, y + this.headroom];
+  return [Math.max(x, (this.x_width + this.x_padding) * this.objs.length - this.x_padding), y + this.headroom];
 }
 
 _f4u$t.TabGroup.prototype.dims = function() {
@@ -1115,7 +1115,7 @@ _f4u$t.TabGroup.prototype.dims = function() {
     x = Math.max(x, dim[0]);
     y = Math.max(y, dim[1]);
   }
-  return [x, y + this.headroom];
+  return [Math.max(x, (this.x_width + this.x_padding) * this.objs.length - this.x_padding), y + this.headroom];
 }
 
 _f4u$t.TabGroup.prototype.do_spacing = function(x,y) {
