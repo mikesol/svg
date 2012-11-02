@@ -238,6 +238,23 @@ _f4u$t.RotatingButton.prototype.make_knob = function(svg, parent, id) {
   return knob;
 }
 
+_f4u$t.RotatingButton.prototype.make_anchor = function(svg, parent, id) {
+  var trans = this.get_translation();
+  var origin = _f4u$t.coord_sub([0,0], trans);
+  var full_id = 'faust_rbutton_anchor_'+id;
+
+  var anchor = svg.path(
+    parent,
+    "",
+    {
+      id : full_id,
+      transform : 'translate('+origin[0]+','+origin[1]+')',
+    }
+  );
+  
+  return anchor;
+}
+
 _f4u$t.RotatingButton.prototype.make = function(svg, parent) {
   var id = _f4u$t.randString();
   var g = this.make_group(svg, parent, id);
@@ -259,6 +276,7 @@ _f4u$t.RotatingButton.prototype.make = function(svg, parent) {
     this.address
   );
 
+  this.make_anchor(svg, g, id);
   this.make_joint(svg, g, id);
   this.make_knob(svg, g, id);
   this.make_value_box(svg, g, id, '_f4u$t.rotating_button_key_sink("'+id+'")');

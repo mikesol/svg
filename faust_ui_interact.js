@@ -243,6 +243,7 @@ _f4u$t.moveActiveSlider = function(e)
 _f4u$t.moveActiveRotatingButton = function(e)
 {
   var sliding_part = document.getElementById(_f4u$t._I);
+  var anchor = document.getElementById('faust_rbutton_anchor_'+_f4u$t.unique(_f4u$t._I));
   var id = _f4u$t.unique(_f4u$t._I);
   var OX = _f4u$t.IDS_TO_ATTRIBUTES[id]["OX"];
   var OY = _f4u$t.IDS_TO_ATTRIBUTES[id]["OY"];
@@ -251,9 +252,12 @@ _f4u$t.moveActiveRotatingButton = function(e)
   var A0 = _f4u$t.IDS_TO_ATTRIBUTES[id]["A0"];
   var SW = _f4u$t.IDS_TO_ATTRIBUTES[id]["SW"];
   var P = _f4u$t.IDS_TO_ATTRIBUTES[id]["P"];
-  var os = $(sliding_part).offset();
-  var my_y = (os['top'] / _f4u$t.VIEWPORT_SCALE) + RY;
+  //var os = $(sliding_part).offset();
+  var os = $(anchor).offset();
+  var my_y = os['top'] / _f4u$t.VIEWPORT_SCALE;
   var my_x = os['left'] / _f4u$t.VIEWPORT_SCALE;
+  
+  console.log(_f4u$t.getClientX(e), my_x, sliding_part.getBoundingClientRect(), _f4u$t.getClientY(e), my_y, $(sliding_part).height(), _f4u$t.VIEWPORT_SCALE);
   var diff = 180. * (Math.atan2(_f4u$t.getClientY(e) - my_y, _f4u$t.getClientX(e) - my_x) - Math.atan2(_f4u$t.PREV[_f4u$t.Y_AXIS] - my_y, _f4u$t.PREV[_f4u$t.X_AXIS] - my_x)) / Math.PI;
   // if diff is to great, the browser is going berzerk...
   if (-180 > diff) {
@@ -274,6 +278,7 @@ _f4u$t.moveActiveRotatingButton = function(e)
   var now = _f4u$t.generic_label_update(_f4u$t.unique(_f4u$t._I), aval, A0, A0 + SW - (SW * P));
   var movetothis = _f4u$t.arrayToTransform(transform);
   sliding_part.setAttribute("transform", movetothis);
+  console.log(movetothis);
   _f4u$t.updateXY(e);
   return now;
 }
@@ -382,7 +387,7 @@ _f4u$t.activate_nentry = function(I,dir) {
     _f4u$t.updateXY(e);
   }
   */
-console.log("OK");
+
   _f4u$t._I = I;
   var id = _f4u$t.unique(_f4u$t._I);
 
