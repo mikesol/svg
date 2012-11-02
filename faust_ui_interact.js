@@ -251,8 +251,10 @@ _f4u$t.moveActiveRotatingButton = function(e)
   var A0 = _f4u$t.IDS_TO_ATTRIBUTES[id]["A0"];
   var SW = _f4u$t.IDS_TO_ATTRIBUTES[id]["SW"];
   var P = _f4u$t.IDS_TO_ATTRIBUTES[id]["P"];
-
-  var diff = 180. * (Math.atan2(_f4u$t.getClientY(e) - OY - RY, _f4u$t.getClientX(e) - OX - RX) - Math.atan2(_f4u$t.PREV[_f4u$t.Y_AXIS] - OY - RY, _f4u$t.PREV[_f4u$t.X_AXIS] - OX - RX)) / Math.PI;
+  var os = $(sliding_part).offset();
+  var my_y = (os['top'] / _f4u$t.VIEWPORT_SCALE) + RY;
+  var my_x = os['left'] / _f4u$t.VIEWPORT_SCALE;
+  var diff = 180. * (Math.atan2(_f4u$t.getClientY(e) - my_y, _f4u$t.getClientX(e) - my_x) - Math.atan2(_f4u$t.PREV[_f4u$t.Y_AXIS] - my_y, _f4u$t.PREV[_f4u$t.X_AXIS] - my_x)) / Math.PI;
   // if diff is to great, the browser is going berzerk...
   if (-180 > diff) {
     diff += 360;
