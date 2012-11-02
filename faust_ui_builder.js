@@ -10,6 +10,18 @@ _f4u$t.has_knob = function(dct) {
   return false;  
 }
 
+_f4u$t.get_unit = function(dct) {
+  if (!dct['meta']) {
+    return '';
+  }
+  for (var i=0; i < dct['meta'].length; i++) {
+    if (dct['meta'][i]['unit']) {
+      return dct['meta'][i]['unit'];
+    }
+  }
+  return '';
+}
+
 _f4u$t.make_rbutton = function(dct) {
   return new _f4u$t.RotatingButton({
     label : dct["label"],
@@ -17,7 +29,8 @@ _f4u$t.make_rbutton = function(dct) {
     mx : parseFloat(dct["max"]),
     step : parseFloat(dct["step"]),
     address : dct["address"],
-    def : parseFloat(dct["init"])
+    def : parseFloat(dct["init"]),
+    unit : _f4u$t.get_unit(dct)
   });
 }
 
@@ -39,7 +52,8 @@ _f4u$t.make_slider = function(kls, dct) {
     mx : parseFloat(dct["max"]),
     step : parseFloat(dct["step"]),
     address : dct["address"],
-    def : parseFloat(dct["init"])
+    def : parseFloat(dct["init"]),
+    unit : _f4u$t.get_unit(dct)
   });
 }
 
@@ -56,7 +70,8 @@ _f4u$t.make_bargraph = function(kls, dct) {
     label : dct["label"],
     mn : parseFloat(dct["min"]),
     mx : parseFloat(dct["max"]),
-    address : dct["address"]
+    address : dct["address"],
+    unit : _f4u$t.get_unit(dct)
   });
 }
 
@@ -87,7 +102,8 @@ console.log("WORKING");
     mx : parseFloat(dct["max"]),
     step : parseFloat(dct["step"]),
     address : dct["address"],
-    def : parseFloat(dct["init"])
+    def : parseFloat(dct["init"]),
+    unit : _f4u$t.get_unit(dct)
   });
 }
 

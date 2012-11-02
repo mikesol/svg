@@ -78,11 +78,15 @@ _f4u$t.IncrementalObject.prototype.make_value_value = function(svg, parent, id, 
 }
 
 _f4u$t.IncrementalObject.prototype.make_label = function(svg, parent, id) {
+  var label = this.label;
+  if (this.unit) {
+    label += ' ('+this.unit+')';
+  }
   var vl = svg.text(
     parent,
     0,
     0,
-    this.label,
+    label,
     {
       id: 'faust_label_'+id,
       transform: 'translate(0,'+(this.internal_dims()[1] + this.lpadding_y + this.lpadding_y)+')'
@@ -114,7 +118,7 @@ _f4u$t.RotatingButton = function(options) {
   this.sweep = sweep;
   this.sp = options.sp || 0.1;
   this.label = options.label || '';
-  this.unit = options.unit || 'unit';
+  this.unit = options.unit || null;
   this.mn = options.mn || 0;
   this.mx = options.mx || 100;
   this.def = _f4u$t.bound(options.def || 50, this.mn, this.mx);
@@ -265,10 +269,6 @@ _f4u$t.RotatingButton.prototype.make = function(svg, parent) {
     this.a0 + 180,
     this.sweep,
     this.sp,
-    origin[0],
-    origin[1],
-    this.get_x_offset(),
-    this.get_y_offset(),
     this.mn,
     this.mx,
     this.step,
@@ -300,7 +300,7 @@ _f4u$t.SlidingObject = function(options) {
   this.mwa = options.mwa || 20;
   this.msa = options.msa || 100;
   this.label = options.label || '';
-  this.unit = options.unit || 'grames';
+  this.unit = options.unit || null;
   this.mn = options.mn || 0;
   this.mx = options.mx || 100;
   this.def = _f4u$t.bound(options.def || 50, this.mn, this.mx);
@@ -563,7 +563,6 @@ _f4u$t.CheckBox.prototype.make_check = function(svg, parent, id) {
   var w = this.d;
   var h = this.d;
   var scale = this.d * 1.0 / this.MAGIC;
-  _f4u$t.initiate_checkbox(full_id, this.address);
   var box = svg.path(
     parent,
     "M 8.5296806,20.14262 C 6.6396806,17.55262 6.7896806,15.14262 5.2896806,13.53262 C 3.7896806,11.95262 5.6496806,12.23262 6.0696806,12.49262 C 9.5326806,14.79862 8.7036806,21.25062 11.339681,13.13262 C 13.095681,6.90862 16.589681,1.89262 17.296681,0.95421999 C 18.049681,0.02261999 18.400681,1.04122 17.638681,2.16262 C 14.279681,7.67262 13.569681,11.03262 11.150681,19.23262 C 10.846681,20.26262 9.3646806,21.28262 8.5296806,20.13262 L 8.5286806,20.13762 L 8.5296806,20.14262 z",
@@ -655,7 +654,7 @@ _f4u$t.Button.prototype.make_button_box = function(svg, parent, id) {
     d,
     {
       id : full_id,
-      style : "fill:"+_f4u$t.color_to_rgb(this.fillOff)+";",
+      style : "fill:"+_f4u$t.color_to_rgb(this.fillOff)+";stroke:black;",
       onmousedown : '_f4u$t.button_down("'+full_id+'")',
       onmouseup : '_f4u$t.button_up("'+full_id+'")'
     }
@@ -708,7 +707,7 @@ _f4u$t.NumericalEntry = function(options) {
   this._w = this.iw;
   this._h = this.ih;
   this.label = options.label || '';
-  this.unit = options.unitl || 'grames';
+  this.unit = options.unit || null;
   this.mn = options.mn || 0;
   this.mx = options.mx || 100;
   this.def = _f4u$t.bound(options.def || 50, this.mn, this.mx);

@@ -245,10 +245,6 @@ _f4u$t.moveActiveRotatingButton = function(e)
   var sliding_part = document.getElementById(_f4u$t._I);
   var anchor = document.getElementById('faust_rbutton_anchor_'+_f4u$t.unique(_f4u$t._I));
   var id = _f4u$t.unique(_f4u$t._I);
-  var OX = _f4u$t.IDS_TO_ATTRIBUTES[id]["OX"];
-  var OY = _f4u$t.IDS_TO_ATTRIBUTES[id]["OY"];
-  var RX = _f4u$t.IDS_TO_ATTRIBUTES[id]["RX"];
-  var RY = _f4u$t.IDS_TO_ATTRIBUTES[id]["RY"];
   var A0 = _f4u$t.IDS_TO_ATTRIBUTES[id]["A0"];
   var SW = _f4u$t.IDS_TO_ATTRIBUTES[id]["SW"];
   var P = _f4u$t.IDS_TO_ATTRIBUTES[id]["P"];
@@ -312,7 +308,7 @@ _f4u$t.initiate_slider = function(A, I, T, P, MN, MX, S, L, AD) {
   */
   var id = _f4u$t.unique(I);
   _f4u$t.IDS_TO_ATTRIBUTES[id] = {};
-  _f4u$t.IDS_TO_ATTRIBUTES[id]["I"] = I;
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["type"] = (A == _f4u$t.X_AXIS ? "hslider" : "vslider");
   _f4u$t.IDS_TO_ATTRIBUTES[id]["A"] = A;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["T"] = T;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["P"] = P;
@@ -333,7 +329,7 @@ _f4u$t.initiate_nentry = function(I, MN, MX, S, D, L, AD) {
   */
   var id = _f4u$t.unique(I);
   _f4u$t.IDS_TO_ATTRIBUTES[id] = {};
-  _f4u$t.IDS_TO_ATTRIBUTES[id]["I"] = I;
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["type"] = "nentry";
   _f4u$t.IDS_TO_ATTRIBUTES[id]["MN"] = MN;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["MX"] = MX;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["S"] = S;
@@ -412,7 +408,7 @@ _f4u$t.activate_vslider = function(I) {
   _f4u$t.activate_slider(I);
 }
 
-_f4u$t.initiate_rbutton = function(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S,L,AD) {
+_f4u$t.initiate_rbutton = function(I,A0,SW,P,MN,MX,S,L,AD) {
   /*
   if (_f4u$t.PREV[_f4u$t.X_AXIS] == _f4u$t.NETHERWORLD) {
     _f4u$t.updateXY(e);
@@ -420,17 +416,13 @@ _f4u$t.initiate_rbutton = function(I,A0,SW,P,RX,RY,OX,OY,MN,MX,S,L,AD) {
   */
   var id = _f4u$t.unique(I);
   _f4u$t.IDS_TO_ATTRIBUTES[id] = {};
-  _f4u$t.IDS_TO_ATTRIBUTES[id]["I"] = I;
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["type"] = "rbutton";
   _f4u$t.IDS_TO_ATTRIBUTES[id]["A0"] = A0;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["SW"] = SW;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["P"] = P;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["L"] = L;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["MN"] = MN;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["MX"] = MX;
-  _f4u$t.IDS_TO_ATTRIBUTES[id]["RX"] = RX;
-  _f4u$t.IDS_TO_ATTRIBUTES[id]["RY"] = RY;
-  _f4u$t.IDS_TO_ATTRIBUTES[id]["OX"] = OX;
-  _f4u$t.IDS_TO_ATTRIBUTES[id]["OY"] = OY;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["S"] = S;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["AD"] = AD;
   _f4u$t.path_to_id(AD, I);
@@ -463,7 +455,7 @@ _f4u$t.button_down = function(I) {
 _f4u$t.initiate_button = function(I, UF, DF, AD) {
   var id = _f4u$t.unique(I);
   _f4u$t.IDS_TO_ATTRIBUTES[id] = {};
-  _f4u$t.IDS_TO_ATTRIBUTES[id]["I"] = I;
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["type"] = "button";
   _f4u$t.IDS_TO_ATTRIBUTES[id]["UF"] = UF;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["DF"] = DF;
   _f4u$t.IDS_TO_ATTRIBUTES[id]["AD"] = AD;
@@ -492,7 +484,7 @@ _f4u$t.change_checkbox = function(I) {
 _f4u$t.initiate_checkbox = function(I, AD) {
   var id = _f4u$t.unique(I);
   _f4u$t.IDS_TO_ATTRIBUTES[id] = {};
-  _f4u$t.IDS_TO_ATTRIBUTES[id]["I"] = I;
+  _f4u$t.IDS_TO_ATTRIBUTES[id]["type"] = "checkbox";
   _f4u$t.IDS_TO_ATTRIBUTES[id]["AD"] = AD;
   _f4u$t.path_to_id(AD, I);
 }
