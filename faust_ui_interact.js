@@ -207,7 +207,7 @@ _f4u$t.moveActiveSlider = function(e)
 
   // minimum of the slider is to the bottom / left
   transform[0][A + 1] = _f4u$t.genericMovingPartUpdate(aval, transform[0][A + 1], 0, T - (T * P));
-  var now = _f4u$t.generic_flipped_label_update(id, aval, 0, T - (T * P));
+  var now = _f4u$t[_f4u$t.xy(A, "generic_label_update", "generic_flipped_label_update")](id, aval, 0, T - (T * P));
   var movetothis = _f4u$t.arrayToTransform(transform);
   sliding_part.setAttribute("transform", movetothis);
   _f4u$t.updateXY(e);
@@ -494,7 +494,7 @@ _f4u$t.actualize_incremental_object = function(id) {
     var T = _f4u$t.IDS_TO_ATTRIBUTES[id]["T"];
     var P = _f4u$t.IDS_TO_ATTRIBUTES[id]["P"];
     var A = _f4u$t.IDS_TO_ATTRIBUTES[id]["A"];
-    val = _f4u$t.remap_and_flip(val, MN, MX, 0, T - (T * P));
+    val = _f4u$t[_f4u$t.xy(A, "remap", "remap_and_flip")](val, MN, MX, 0, T - (T * P));
     var transform = _f4u$t.transformToArray(maybe_slider.getAttribute("transform"));
     transform[0][A + 1] = val;
     var movetothis = _f4u$t.arrayToTransform(transform);

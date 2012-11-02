@@ -367,7 +367,7 @@ _f4u$t.extend(_f4u$t.SlidingObject, _f4u$t.Slider);
 _f4u$t.Slider.prototype.make_knob = function(svg, parent, id) {
   var slider_girth = this.sa()  * this.sp;
   var half_slider_girth = slider_girth * 0.5;
-  var startp = _f4u$t.remap_and_flip(this.def, this.mn, this.mx, 0 + half_slider_girth, this.sa() - half_slider_girth);
+  var startp = _f4u$t.xy(this.o, _f4u$t.remap, _f4u$t.remap_and_flip)(this.def, this.mn, this.mx, 0 + half_slider_girth, this.sa() - half_slider_girth);
   var bottom = startp - half_slider_girth;
   var top = startp + half_slider_girth;
   var w = _f4u$t.xy(this.o, slider_girth, this.wa());
