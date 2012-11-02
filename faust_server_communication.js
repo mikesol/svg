@@ -33,19 +33,13 @@ _f4u$t.update_rbutton_value = function(id, value) {
 }
 
 _f4u$t.update_nentry_value = function(id, value) {
-  _f4u$t.dumb_label_update(unique(id), value);
+  _f4u$t.dumb_label_update(id, value);
 }
 
 _f4u$t.update_checkbox_value = function(id, value) {
   // perhaps too much UI here?
-console.log(value);
-  var check = document.getElementById('faust_checkbox_check_'+unique(id));  
+  var check = document.getElementById('faust_checkbox_check_'+id);  
   check.style.opacity = value;
-}
-
-_f4u$t.update_checkbox_value = function(id, value) {
-  // should work...
-  _f4u$t.change_checkbox(id);
 }
 
 _f4u$t.dispatch = function(data) {
@@ -58,9 +52,7 @@ _f4u$t.dispatch = function(data) {
       var value = Math.round(values[1]*10000)/10000;
       //$('[name="'+address+'"]').val(value);
       var id = _f4u$t.PATHS_TO_IDS[address];
-console.log("<<<", address, id, kind);
-      var kind = _f4u$t.IDS_TO_ATTRIBUTES[id].type;
-console.log(">>>",address, id, kind);
+      var kind = _f4u$t.IDS_TO_ATTRIBUTES[id] ? _f4u$t.IDS_TO_ATTRIBUTES[id].type : null ;
       if (kind == 'vslider') { _f4u$t.update_vslider_value(id, value); }
       else if (kind == 'hslider') { _f4u$t.update_hslider_value(id, value); }
       else if (kind == 'rbutton') { _f4u$t.update_rbutton_value(id, value); }
@@ -72,7 +64,7 @@ console.log(">>>",address, id, kind);
       else if (kind == 'vbargraph') { _f4u$t.update_vertical_bar_value(id, value); }
       else if (kind == 'hbargraph)' { _f4u$t.update_horizontal_bar_value(id, value); }
       */
-      else { console.log("Unidentified Faust Object (UFO) "+id+" "+kind); }
+      else { if (0) { console.log("Unidentified Faust Object (UFO) "+id+" "+kind); }}
     }
   }
 }
