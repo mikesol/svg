@@ -551,7 +551,7 @@ _f4u$t.CheckBox.prototype.make_box = function(svg, parent, id) {
     {
       id : full_id,
       style : "fill:white;stroke:black;",
-      onmousedown : '_f4u$t.change_checkbox({0})'.format(full_id)
+      onmousedown : '_f4u$t.change_checkbox("'+full_id+'")'
     }
   );
 
@@ -570,7 +570,7 @@ _f4u$t.CheckBox.prototype.make_check = function(svg, parent, id) {
       id : full_id,
       transform : "scale("+scale+","+scale+") translate(-1.0896806, -4.3926201)",
       style : "fill:"+_f4u$t.color_to_rgb(this.fill)+";opacity:"+(this.def == 1 ? 1.0 : 0.0)+";",
-      onmousedown : '_f4u$t.change_checkbox({0})'.format(full_id)
+      onmousedown : '_f4u$t.change_checkbox("'+full_id+'")'
     }
   );
 

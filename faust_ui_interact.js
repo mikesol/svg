@@ -442,7 +442,7 @@ _f4u$t.initiate_button = function(I, UF, DF, AD) {
 _f4u$t.change_checkbox = function(I) {
   _f4u$t.clog_key_sink();
   var AD = _f4u$t.IDS_TO_ATTRIBUTES[_f4u$t.unique(I)]["AD"];
-  var box = document.getElementById(I);
+  var box = document.getElementById('faust_checkbox_check_'+_f4u$t.unique(I));
   var opacity = 0;
   if (box.style.opacity == 1.0) {
     opacity = 0;
