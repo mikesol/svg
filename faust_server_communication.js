@@ -67,8 +67,8 @@ _f4u$t.dispatch = function(data) {
       else if (kind == 'checkbox') { _f4u$t.update_checkbox_value(id, value); }
       else if (kind == 'button') { /* do nothing */ }
       else if (kind == 'nentry') { _f4u$t.update_nentry_value(id, value); }
-      else if (kind == 'vbargraph') { _f4u$t.update_vertical_bar_value(id, value); }
-      else if (kind == 'hbargraph)' { _f4u$t.update_horizontal_bar_value(id, value); }
+      else if (kind == 'vbargraph') { _f4u$t.update_vbargraph_value(id, value); }
+      else if (kind == 'hbargraph') { _f4u$t.update_hbargraph_value(id, value); }
       else { if (0) { console.log("Unidentified Faust Object (UFO) "+id+" "+kind); }}
     }
   }

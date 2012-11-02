@@ -458,12 +458,16 @@ _f4u$t.extend(_f4u$t.SlidingObject, _f4u$t.BarGraph);
 
 _f4u$t.BarGraph.prototype.make_meter = function(svg, parent, id) {
   var full_id = 'faust_'+this.type+'_meter_'+id;
-  def = _f4u$t.remap(this.def, this.mn, this.mx, 0, this.sa())
+  def = _f4u$t.xy(this.o, _f4u$t.remap, _f4u$t.remap_and_flip)(this.def, this.mn, this.mx, 0, this.sa())
   var w = _f4u$t.xy(this.o, def, this.wa());
   var h = _f4u$t.xy(this.o, this.wa(), def);
   var meter = svg.path(
     parent,
-    "M0 0L"+w+" 0L"+w+" "+h+"L0 "+h+"L0 0",
+    _f4u$t.xy(
+      this.o,
+      "M0 0L"+w+" 0L"+w+" "+h+"L0 "+h+"L0 0",
+      "M0 "+this.sa()+"L"+w+" "+this.sa()+"L"+w+" "+h+"L0 "+h+"L0 "+this.sa()
+    ),
     {
       id : full_id,
       style : "fill:grey;stroke:black;"
@@ -478,7 +482,8 @@ _f4u$t.BarGraph.prototype.make = function(svg, parent) {
   var g = this.make_group(svg, parent, id);
   _f4u$t['initiate_'+this.type](
     id,
-    this.wa,
+    this.wa(),
+    this.sa(),
     this.mn,
     this.mx,
     this.step,

@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <script type="text/javascript" src="jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="jquerysvg/jquery.svg.js"></script>
+    <script type="text/javascript" src="faust_proto.js"></script>
+    <script type="text/javascript" src="faust_ui_objects.js"></script>
+    <script type="text/javascript" src="faust_ui_builder.js"></script>
+    <script type="text/javascript" src="faust_ui_interact.js"></script>
+    <script type="text/javascript" src="faust_server_communication.js"></script>
+  </head>
+  <body>
+    <div id="faustsvg">
+    </div>
+    <script type="text/javascript">
+      $('#faustsvg').svg({onLoad: function (svg) {
+        _f4u$t.make_ui(svg, '{ "name": "dbmeter", "address": "new-host.home", "port": "5510", "ui": [ { "type": "hgroup", "label": "8_channels_dB_meter", "items": [ { "type": "vgroup", "label": "0", "items": [ { "type": "vbargraph", "label": "", "address": "/8_channels_dB_meter/0/", "meta": [ { "unit": "dB"} ], "min": "-70", "max": "10" } ] }, { "type": "vgroup", "label": "1", "items": [ { "type": "vbargraph", "label": "", "address": "/8_channels_dB_meter/1/", "meta": [ { "unit": "dB"} ], "min": "-70", "max": "10" } ] }, { "type": "vgroup", "label": "2", "items": [ { "type": "vbargraph", "label": "", "address": "/8_channels_dB_meter/2/", "meta": [ { "unit": "dB"} ], "min": "-70", "max": "10" } ] }, { "type": "vgroup", "label": "3", "items": [ { "type": "vbargraph", "label": "", "address": "/8_channels_dB_meter/3/", "meta": [ { "unit": "dB"} ], "min": "-70", "max": "10" } ] }, { "type": "vgroup", "label": "4", "items": [ { "type": "vbargraph", "label": "", "address": "/8_channels_dB_meter/4/", "meta": [ { "unit": "dB"} ], "min": "-70", "max": "10" } ] }, { "type": "vgroup", "label": "5", "items": [ { "type": "vbargraph", "label": "", "address": "/8_channels_dB_meter/5/", "meta": [ { "unit": "dB"} ], "min": "-70", "max": "10" } ] }, { "type": "vgroup", "label": "6", "items": [ { "type": "vbargraph", "label": "", "address": "/8_channels_dB_meter/6/", "meta": [ { "unit": "dB"} ], "min": "-70", "max": "10" } ] }, { "type": "vgroup", "label": "7", "items": [ { "type": "vbargraph", "label": "", "address": "/8_channels_dB_meter/7/", "meta": [ { "unit": "dB"} ], "min": "-70", "max": "10" } ] } ] } ] } ');
+      }});
+    </script>
+  </body>
+</html>
