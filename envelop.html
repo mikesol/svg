@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <script type="text/javascript" src="jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="jquerysvg/jquery.svg.js"></script>
+    <script type="text/javascript" src="faust_proto.js"></script>
+    <script type="text/javascript" src="faust_ui_objects.js"></script>
+    <script type="text/javascript" src="faust_ui_builder.js"></script>
+    <script type="text/javascript" src="faust_ui_interact.js"></script>
+    <script type="text/javascript" src="faust_server_communication.js"></script>
+  </head>
+  <body>
+    <div id="faustsvg">
+    </div>
+    <script type="text/javascript">
+      $('#faustsvg').svg({onLoad: function (svg) {
+        _f4u$t.make_ui(svg, '{ "name": "envelop", "address": "new-host.home", "port": "5510", "ui": [ { "type": "vgroup", "label": "envelop", "items": [ { "type": "hgroup", "label": "", "items": [ { "type": "nentry", "label": "attack", "address": "/envelop//attack", "meta": [ { "1": ""}, { "style": "knob"}, { "unit": "ms"} ], "init": "20", "min": "1", "max": "1000", "step": "1" }, { "type": "nentry", "label": "decay", "address": "/envelop//decay", "meta": [ { "2": ""}, { "style": "knob"} ], "init": "2", "min": "1", "max": "100", "step": "0.1" }, { "type": "nentry", "label": "sustain", "address": "/envelop//sustain", "meta": [ { "3": ""}, { "style": "knob"}, { "unit": "pc"} ], "init": "10", "min": "1", "max": "100", "step": "0.1" }, { "type": "nentry", "label": "release", "address": "/envelop//release", "meta": [ { "4": ""}, { "style": "knob"} ], "init": "10", "min": "1", "max": "100", "step": "0.1" } ] }, { "type": "button", "label": "play", "address": "/envelop/play" } ] } ] } ');
+      }});
+    </script>
+  </body>
+</html>
