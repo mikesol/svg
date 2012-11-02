@@ -877,6 +877,10 @@ _f4u$t.LayoutManager.prototype.dims = function() {
   return out;
 }
 
+_f4u$t.LayoutManager.prototype.viewport_dims = function() {
+  return this.box_cache.lens();
+}
+
 _f4u$t.LayoutManager.prototype.get_ratio_and_leftover = function(x, y) {
   if (this.constrain) {
     var dims = this.internal_dims();
@@ -1075,6 +1079,17 @@ _f4u$t.TabGroup.prototype.populate_objects = function() {
   }
 }
 
+_f4u$t.TabGroup.prototype.viewport_dims = function() {
+  var x = 0;
+  var y = 0;
+  for (var i = 0; i < this.objs.length; i++) {
+    var dim = this.objs[i].viewport_dims();
+    x = Math.max(x, dim[0]);
+    y = Math.max(y, dim[1]);
+  }
+  return [x, y + this.headroom];
+}
+
 _f4u$t.TabGroup.prototype.dims = function() {
   var x = 0;
   var y = 0;
@@ -1190,14 +1205,9 @@ _f4u$t.SVG.prototype.get_y_offset = function() {
 }
 
 _f4u$t.SVG.prototype.make = function() {
-  if (!this.constrain) {
-    var dims = this.lm.dims();
+  if (!this.constrain) {    
     this.svg.configure(
       {
-        // kludge for viewbox...not sure why this extra space is necessary
-        //viewBox: '-20 -20 '+(dims[0] + 100)+' '+(dims[1] + 100),
-        //viewBox: '-20 -20 '+(dims[0] - 400)+' '+(dims[1] - 400),
-        viewBox: '0 0 '+dims[0]+' '+dims[1],
         width : this.w+'px',
         height: this.h+'px'
       },
@@ -1207,5 +1217,19 @@ _f4u$t.SVG.prototype.make = function() {
   this.lm.populate_objects();
   this.lm.do_spacing(this.w, this.h);
   this.lm.make(this.svg, this.svg);
+  // if there is no constrain, the viewport needs to be scaled
+  var viewport_dims = this.lm.viewport_dims();
+  _f4u$t.VIEWPORT_SCALE = 1.0;
+  if (!this.constrain) {    
+    this.svg.configure(
+      {
+        viewBox: '0 0 '+viewport_dims[0]+' '+viewport_dims[1],
+        width : this.w+'px',
+        height: this.h+'px'
+      },
+      true);
+    _f4u$t.VIEWPORT_SCALE = Math.min(this.w/viewport_dims[0], this.h/viewport_dims[1]);
+    console.log(_f4u$t.VIEWPORT_SCALE);
+  }
 }
 

@@ -56,6 +56,14 @@ _f4u$t.unique = function(s) {
   return spl[spl.length - 1];
 }
 
+_f4u$t.getClientX = function(e) {
+  return e.clientX / _f4u$t.VIEWPORT_SCALE;
+}
+
+_f4u$t.getClientY = function(e) {
+  return e.clientY / _f4u$t.VIEWPORT_SCALE;
+}
+
 // parser of an object's transform
 
 _f4u$t.transformToArray = function(transform) {
@@ -140,8 +148,8 @@ _f4u$t.arrayToTransform = function(array) {
 }
 
 _f4u$t.updateXY = function(e) {
-  _f4u$t.PREV[_f4u$t.X_AXIS] = e.clientX;
-  _f4u$t.PREV[_f4u$t.Y_AXIS] = e.clientY;
+  _f4u$t.PREV[_f4u$t.X_AXIS] = _f4u$t.getClientX(e);
+  _f4u$t.PREV[_f4u$t.Y_AXIS] = _f4u$t.getClientY(e);
 }
 
 // main function to move currently-selected slider
@@ -209,10 +217,10 @@ _f4u$t.moveActiveSlider = function(e)
   var pos = -1;
   // we only care about the axis of the slider
   if (A == _f4u$t.X_AXIS) {
-    pos = e.clientX;
+    pos = _f4u$t.getClientX(e);
   }
   else {
-    pos = e.clientY;
+    pos = _f4u$t.getClientY(e);
   }
 
   var diff = pos - _f4u$t.PREV[A];
@@ -244,7 +252,7 @@ _f4u$t.moveActiveRotatingButton = function(e)
   var SW = _f4u$t.IDS_TO_ATTRIBUTES[id]["SW"];
   var P = _f4u$t.IDS_TO_ATTRIBUTES[id]["P"];
 
-  var diff = 180. * (Math.atan2(e.clientY - OY - RY, e.clientX - OX - RX) - Math.atan2(_f4u$t.PREV[_f4u$t.Y_AXIS] - OY - RY, _f4u$t.PREV[_f4u$t.X_AXIS] - OX - RX)) / Math.PI;
+  var diff = 180. * (Math.atan2(_f4u$t.getClientY(e) - OY - RY, _f4u$t.getClientX(e) - OX - RX) - Math.atan2(_f4u$t.PREV[_f4u$t.Y_AXIS] - OY - RY, _f4u$t.PREV[_f4u$t.X_AXIS] - OX - RX)) / Math.PI;
   // if diff is to great, the browser is going berzerk...
   if (-180 > diff) {
     diff += 360;
