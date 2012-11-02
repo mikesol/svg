@@ -2,10 +2,12 @@ _f4u$t.has_knob = function(dct) {
   if (!dct['meta']) {
     return false;
   }
-  if (!dct['meta'][0]['style']) {
-    return false;
+  for (var i=0; i < dct['meta'].length; i++) {
+    if (dct['meta'][i]['style']) {
+      return dct['meta'][i]['style'] == 'knob';
+    }
   }
-  return dct['meta'][0]['style'] == 'knob';
+  return false;  
 }
 
 _f4u$t.make_rbutton = function(dct) {
@@ -76,6 +78,7 @@ _f4u$t.make_checkbox = function(dct) {
 
 _f4u$t.make_nentry = function(dct) {
   if (_f4u$t.has_knob(dct)) {
+console.log("WORKING");
     return _f4u$t.make_rbutton(dct);
   }
   return new _f4u$t.NumericalEntry({

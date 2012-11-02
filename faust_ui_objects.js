@@ -113,7 +113,7 @@ _f4u$t.RotatingButton = function(options) {
   this.a0 = a0;
   this.sweep = sweep;
   this.sp = options.sp || 0.1;
-  this.label = options.label || 'foo';
+  this.label = options.label || '';
   this.unit = options.unit || 'unit';
   this.mn = options.mn || 0;
   this.mx = options.mx || 100;
@@ -281,7 +281,7 @@ _f4u$t.SlidingObject = function(options) {
   this._wa = this.iwa;
   this.mwa = options.mwa || 20;
   this.msa = options.msa || 100;
-  this.label = options.label || 'foo';
+  this.label = options.label || '';
   this.unit = options.unit || 'grames';
   this.mn = options.mn || 0;
   this.mx = options.mx || 100;
@@ -499,7 +499,7 @@ _f4u$t.CheckBox = function(options) {
   this.MAGIC = 19; // not optional...
   this.mom = options.mom || null;
   this.d = options.d || 19;
-  this.label = options.label || 'foo';
+  this.label = options.label || '';
   this.gravity = options.gravity || [_f4u$t.CENTER, _f4u$t.CENTER];
   this.fill = options.fill || _f4u$t.PINK;
   this.def = options.def || false;
@@ -599,7 +599,7 @@ _f4u$t.Button = function(options) {
   this.mh = options.mh || 20;
   this._w = this.iw;
   this._h = this.ih;
-  this.label = options.label || 'foo';
+  this.label = options.label || '';
   this.gravity = options.gravity || [_f4u$t.CENTER, _f4u$t.CENTER];
   this.fillOn = options.fillOn || _f4u$t.PINK;
   this.fillOff = options.fillOff || _f4u$t.GREEN;
@@ -689,7 +689,7 @@ _f4u$t.NumericalEntry = function(options) {
   this.mh = options.mh || _f4u$t.VALUE_BOX_H;
   this._w = this.iw;
   this._h = this.ih;
-  this.label = options.label || 'foo';
+  this.label = options.label || '';
   this.unit = options.unitl || 'grames';
   this.mn = options.mn || 0;
   this.mx = options.mx || 100;
@@ -752,7 +752,7 @@ _f4u$t.NumericalEntry.prototype.make_button = function(svg, parent, id, xo, incr
       transform : 'translate('+xo+',0)',
       id : full_id,
       style : "fill:grey;",
-      mouseDown : function() { _f4u$t.activate_nentry(full_id, incr); }
+      onmousedown : '_f4u$t.activate_nentry("'+full_id+'", '+incr+')'
     }
   );
 
@@ -772,7 +772,7 @@ _f4u$t.NumericalEntry.prototype.make_minus = function(svg, parent, id) {
     {
       id : full_id,
       style: 'stroke:black;',
-      mouseDown : function() { _f4u$t.activate_nentry(full_id, false); }
+      onmousedown : '_f4u$t.activate_nentry("'+full_id+'", false)'
     }
   );
 
@@ -797,7 +797,7 @@ _f4u$t.NumericalEntry.prototype.make_plus = function(svg, parent, id) {
       transform : 'translate('+(this.w() / 2.0 + this.padding)+',0)',
       id : full_id,
       style: 'stroke:black;',
-      mouseDown : function() { _f4u$t.activate_nentry(full_id, true); }
+      onmousedown : '_f4u$t.activate_nentry("'+full_id+'", true)'
     }
   );
 
@@ -827,7 +827,7 @@ _f4u$t.LayoutManager = function(options) {
   this.objs = options.objs || [];
   this.constrain = options.constrain || false;
   this.gravity = options.gravity || [_f4u$t.CENTER, _f4u$t.CENTER];
-  this.label = options.label || 'foo';
+  this.label = options.label || '';
   this.lpadding_y = options.lpaddiny_y || _f4u$t.TEXT_HEIGHT;
   this.box_padding = options.box_padding || _f4u$t.TEXT_BOX_PADDING;
   this.x = 0;
@@ -1190,7 +1190,7 @@ _f4u$t.SVG = function(svg, w, h, options) {
   this.h = h;
   this.constrain = options.constraion || false;
   this.lm = options.lm || null;
-  this.title = options.title || 'foo';
+  this.title = options.title || '';
   this.lm.mom = this;
 }
 
@@ -1229,7 +1229,6 @@ _f4u$t.SVG.prototype.make = function() {
       },
       true);
     _f4u$t.VIEWPORT_SCALE = Math.min(this.w/viewport_dims[0], this.h/viewport_dims[1]);
-    console.log(_f4u$t.VIEWPORT_SCALE);
   }
 }
 

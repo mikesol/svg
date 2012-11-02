@@ -382,6 +382,7 @@ _f4u$t.activate_nentry = function(I,dir) {
     _f4u$t.updateXY(e);
   }
   */
+console.log("OK");
   _f4u$t._I = I;
   var id = _f4u$t.unique(_f4u$t._I);
 
