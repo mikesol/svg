@@ -71,7 +71,7 @@ _f4u$t.IncrementalObject.prototype.make_value_value = function(svg, parent, id, 
     {
       id: 'faust_value_value_'+id,
       transform: 'translate('+this.box_padding+','+(this.internal_dims()[1] + this.lpadding_y)+')',
-      onmousedown : mousedown
+      onmousedown : (mousedown ? mousedown : '_f4u$t.devnull()')
     }
   );
   return vv;
