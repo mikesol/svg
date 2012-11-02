@@ -4,7 +4,7 @@
 // actually using a 'GET' method
 //-----------------------------------------------------------------------------
 _f4u$t.fausthandler = function(dest, value) {
-  if (1) {
+  if (0) {
     var msg = "$.get( " + dest +"?value=" + value + ");";
     console.log(msg);
   }

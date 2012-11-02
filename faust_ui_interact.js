@@ -45,7 +45,7 @@ _f4u$t.bound = function(v,m,n) {
 }
 
 _f4u$t.remap_and_bound = function(v, mn0, mx0, mn1, mx1) {
-  return bound(_f4u$t.remap(v, mn0, mx0, mn1, mx1), mn1, mx1);
+  return _f4u$t.bound(_f4u$t.remap(v, mn0, mx0, mn1, mx1), mn1, mx1);
 }
 
 _f4u$t.unique = function(s) {
@@ -365,7 +365,7 @@ _f4u$t.activate_nentry = function(I,dir) {
     now -= _f4u$t.IDS_TO_ATTRIBUTES[id]["S"];
   }
   
-  now = bound(now, _f4u$t.IDS_TO_ATTRIBUTES[id]["MN"], _f4u$t.IDS_TO_ATTRIBUTES[id]["MX"]);
+  now = _f4u$t.bound(now, _f4u$t.IDS_TO_ATTRIBUTES[id]["MN"], _f4u$t.IDS_TO_ATTRIBUTES[id]["MX"]);
   now = _f4u$t.dumb_label_update(_f4u$t.unique(_f4u$t._I), now);
   return now;
 }
@@ -407,22 +407,23 @@ _f4u$t.activate_rbutton = function(I) {
 }
 
 _f4u$t.button_color_changer = function(I, F) {
-  // this is easier because no mouse-coordinate-based dragging is involved...
   var button = document.getElementById('faust_button_box_'+_f4u$t.unique(I));
   button.style.fill = F;
 }
 
 _f4u$t.button_up = function(I) {
-  _f4u$t.button_color_changer(I, _f4u$t.IDS_TO_ATTRIBUTES[_f4u$t.unique(I)]["UF"]);
-  _f4u$t.fausthandler(_f4u$t.IDS_TO_ATTRIBUTES[_f4u$t.unique(I)]["AD"], 0);
+  var id = _f4u$t.unique(I);
+  _f4u$t.button_color_changer(I, _f4u$t.IDS_TO_ATTRIBUTES[id]["UF"]);
+  _f4u$t.fausthandler(_f4u$t.IDS_TO_ATTRIBUTES[id]["AD"], 0);
   _f4u$t.clearIdCache();
 }
 
 _f4u$t.button_down = function(I) {
+  var id = _f4u$t.unique(I);
   _f4u$t.clog_key_sink();
-  _f4u$t.button_color_changer(I, _f4u$t.IDS_TO_ATTRIBUTES[_f4u$t.unique(I)]["DF"]);
+  _f4u$t.button_color_changer(I, _f4u$t.IDS_TO_ATTRIBUTES[id]["DF"]);
   // UI2DSP
-  _f4u$t.fausthandler(_f4u$t.IDS_TO_ATTRIBUTES[_f4u$t.unique(I)]["AD"], 1);
+  _f4u$t.fausthandler(_f4u$t.IDS_TO_ATTRIBUTES[id]["AD"], 1);
 }
 
 _f4u$t.initiate_button = function(I, UF, DF, AD) {
@@ -527,7 +528,7 @@ _f4u$t.actualize_buffer = function() {
   }
   var c = parseFloat(_f4u$t.IDS_TO_ATTRIBUTES[id]["B"]);
   var label = document.getElementById(_f4u$t._N);
-  var now = bound(c, MN, MX);
+  var now = _f4u$t.bound(c, MN, MX);
   _f4u$t.IDS_TO_ATTRIBUTES[id]["B"] = ""+now;
   label.textContent = _f4u$t.IDS_TO_ATTRIBUTES[id]["B"];
   _f4u$t.IDS_TO_ATTRIBUTES[id]["D"] = _f4u$t.IDS_TO_ATTRIBUTES[id]["B"]; // prevents bad snaps of values
