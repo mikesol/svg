@@ -93,7 +93,6 @@ _f4u$t.make_checkbox = function(dct) {
 
 _f4u$t.make_nentry = function(dct) {
   if (_f4u$t.has_knob(dct)) {
-console.log("WORKING");
     return _f4u$t.make_rbutton(dct);
   }
   return new _f4u$t.NumericalEntry({

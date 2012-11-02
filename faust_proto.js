@@ -54,6 +54,41 @@ _f4u$t.remap = function(v, mn0, mx0, mn1, mx1) {
   return p * (mx1 - mn1) + mn1;
 }
 
+_f4u$t.bound = function(v,m,n) {
+  var mn = Math.min(m,n);
+  var mx = Math.max(m,n);
+  if (v < mn) { return mn; }
+  if (v > mx) { return mx; }
+  return v;
+}
+
+_f4u$t.flip = function(v,m,n) {
+  var mn = Math.min(m,n);
+  var mx = Math.max(m,n);
+  var offset = (mx - mn) / 2.0 + mn;
+  return -1.0 * (v - offset) + offset;
+}
+
+_f4u$t.remap_and_bound = function(v, mn0, mx0, mn1, mx1) {
+  return _f4u$t.bound(_f4u$t.remap(v, mn0, mx0, mn1, mx1), mn1, mx1);
+}
+
+_f4u$t.remap_and_bound_and_flip = function(v, mn0, mx0, mn1, mx1) {
+  return _f4u$t.flip(_f4u$t.bound(_f4u$t.remap(v, mn0, mx0, mn1, mx1), mn1, mx1), mn1, mx1);
+}
+
+_f4u$t.remap_and_flip = function(v, mn0, mx0, mn1, mx1) {
+  return _f4u$t.flip(_f4u$t.remap(v, mn0, mx0, mn1, mx1), mn1, mx1);
+}
+
+_f4u$t.bound_and_flip = function(v, mn1, mx1) {
+  return _f4u$t.flip(_f4u$t.bound(v, mn1, mx1), mn1, mx1);
+}
+
+_f4u$t.sign = function(x) {
+  return (x == 0 ? x : Math.floor(Math.abs(x) / x));
+}
+
 _f4u$t.jvalue = function(val, requested, actual) {
   if (requested == 0) {
     console.log("Do not know how to handle request.");
@@ -81,6 +116,14 @@ _f4u$t.xy = function(a,x,y) {
   return (a == _f4u$t.X_AXIS ? x : y);
 }
 
+_f4u$t.unique = function(s) {
+  var spl = s.split("_");
+  if (spl.length == 0) {
+    return s;
+  }
+  return spl[spl.length - 1];
+}
+
 _f4u$t.color_to_rgb = function(rgb) {
   return (rgb ? "rgb("+rgb[0]+","+rgb[1]+","+rgb[2]+")" : 'none');
 }
@@ -93,10 +136,6 @@ _f4u$t.randString = function() {
     result += chars[Math.round(Math.random() * (chars.length - 1))];
   }
   return result;
-}
-
-_f4u$t.sign = function(x) {
-  return (x == 0 ? x : Math.floor(Math.abs(x) / x));
 }
 
 _f4u$t.find_all_90s = function(a0, sweep) {
@@ -131,14 +170,6 @@ _f4u$t.r2d = function(a) {
 
 _f4u$t.d2r = function(a) {
   return a * Math.PI / 180.;
-}
-
-_f4u$t.bound = function(v,m,n) {
-  var mn = Math.min(m,n);
-  var mx = Math.max(m,n);
-  if (v < mn) { return mn; }
-  if (v > mx) { return mx; }
-  return v;
 }
 
 // a Box class
@@ -237,7 +268,7 @@ _f4u$t.make_ui = function(svg, raw_json) {
     $(window).height(),
     {
       constrain : false,
-      title : json["name"],
+      title : json["ui"][0].label,
       lm : _f4u$t.json_to_ui(json)
     }
   );

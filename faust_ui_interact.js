@@ -30,32 +30,6 @@ _f4u$t.PREV = new Array();
 _f4u$t.PREV[_f4u$t.X_AXIS] = _f4u$t.NETHERWORLD;
 _f4u$t.PREV[_f4u$t.Y_AXIS] = _f4u$t.NETHERWORLD;
 
-// basic utilities
-_f4u$t.remap = function(v, mn0, mx0, mn1, mx1) {
-  var p = 1.0 * (v - mn0) / (mx0 - mn0);
-  return (p * (mx1 - mn1)) + mn1;
-}
-
-_f4u$t.bound = function(v,m,n) {
-  var mn = Math.min(m,n);
-  var mx = Math.max(m,n);
-  if (mn > v) { return mn; }
-  if (v > mx) { return mx; }
-  return v;
-}
-
-_f4u$t.remap_and_bound = function(v, mn0, mx0, mn1, mx1) {
-  return _f4u$t.bound(_f4u$t.remap(v, mn0, mx0, mn1, mx1), mn1, mx1);
-}
-
-_f4u$t.unique = function(s) {
-  var spl = s.split("_");
-  if (spl.length == 0) {
-    return s;
-  }
-  return spl[spl.length - 1];
-}
-
 _f4u$t.getClientX = function(e) {
   return e.clientX / _f4u$t.VIEWPORT_SCALE;
 }
@@ -233,7 +207,7 @@ _f4u$t.moveActiveSlider = function(e)
 
   // minimum of the slider is to the bottom / left
   transform[0][A + 1] = _f4u$t.genericMovingPartUpdate(aval, transform[0][A + 1], 0, T - (T * P));
-  var now = _f4u$t.generic_label_update(id, aval, 0, T - (T * P));
+  var now = _f4u$t.generic_flipped_label_update(id, aval, 0, T - (T * P));
   var movetothis = _f4u$t.arrayToTransform(transform);
   sliding_part.setAttribute("transform", movetothis);
   _f4u$t.updateXY(e);
@@ -253,7 +227,6 @@ _f4u$t.moveActiveRotatingButton = function(e)
   var my_y = os['top'] / _f4u$t.VIEWPORT_SCALE;
   var my_x = os['left'] / _f4u$t.VIEWPORT_SCALE;
   
-  console.log(_f4u$t.getClientX(e), my_x, sliding_part.getBoundingClientRect(), _f4u$t.getClientY(e), my_y, $(sliding_part).height(), _f4u$t.VIEWPORT_SCALE);
   var diff = 180. * (Math.atan2(_f4u$t.getClientY(e) - my_y, _f4u$t.getClientX(e) - my_x) - Math.atan2(_f4u$t.PREV[_f4u$t.Y_AXIS] - my_y, _f4u$t.PREV[_f4u$t.X_AXIS] - my_x)) / Math.PI;
   // if diff is to great, the browser is going berzerk...
   if (-180 > diff) {
@@ -274,13 +247,17 @@ _f4u$t.moveActiveRotatingButton = function(e)
   var now = _f4u$t.generic_label_update(_f4u$t.unique(_f4u$t._I), aval, A0, A0 + SW - (SW * P));
   var movetothis = _f4u$t.arrayToTransform(transform);
   sliding_part.setAttribute("transform", movetothis);
-  console.log(movetothis);
   _f4u$t.updateXY(e);
   return now;
 }
 
 _f4u$t.generic_label_update = function(id, c, l, h) {
   var now = _f4u$t.remap_and_bound(c, l, h, _f4u$t.IDS_TO_ATTRIBUTES[id]["MN"], _f4u$t.IDS_TO_ATTRIBUTES[id]["MX"]);
+  return _f4u$t.dumb_label_update(id, now);
+}
+
+_f4u$t.generic_flipped_label_update = function(id, c, l, h) {
+  var now = _f4u$t.remap_and_bound_and_flip(c, l, h, _f4u$t.IDS_TO_ATTRIBUTES[id]["MN"], _f4u$t.IDS_TO_ATTRIBUTES[id]["MX"]);
   return _f4u$t.dumb_label_update(id, now);
 }
 
@@ -517,7 +494,7 @@ _f4u$t.actualize_incremental_object = function(id) {
     var T = _f4u$t.IDS_TO_ATTRIBUTES[id]["T"];
     var P = _f4u$t.IDS_TO_ATTRIBUTES[id]["P"];
     var A = _f4u$t.IDS_TO_ATTRIBUTES[id]["A"];
-    val = _f4u$t.remap(val, MN, MX, 0, T - (T * P));
+    val = _f4u$t.remap_and_flip(val, MN, MX, 0, T - (T * P));
     var transform = _f4u$t.transformToArray(maybe_slider.getAttribute("transform"));
     transform[0][A + 1] = val;
     var movetothis = _f4u$t.arrayToTransform(transform);
