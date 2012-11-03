@@ -917,8 +917,9 @@ _f4u$t.LayoutManager.prototype.internal_dims = function() {
     out[i] = (i == this.o ? out[i].sum() : out[i].max());
   }
 
-  out[_f4u$t.other_axis(this.o)] += this.padding * 2;
-  out[this.o] += this.padding * (this.objs.length + 1);
+  //out[_f4u$t.other_axis(this.o)] += this.padding * 2;
+  //out[this.o] += this.padding * (this.objs.length + 1);
+  out[this.o] += this.padding * (this.objs.length - 1);
   return out;
 }
 
@@ -935,7 +936,7 @@ _f4u$t.LayoutManager.prototype.populate_objects = function() {
 _f4u$t.LayoutManager.prototype.dims = function() {
   var ugh = this.internal_dims();
   var text_w = _f4u$t.get_text_bbox(this.get_root_svg(), this.label).width;
-  var out = [Math.max(ugh[0], text_w), ugh[1] + Math.max(this.lpadding_y, this.padding) + this.padding + _f4u$t.TEXT_PADDING];
+  var out = [Math.max(ugh[0], text_w) + (2 * this.padding), ugh[1] + Math.max(this.lpadding_y, this.padding) + this.padding];
   return out;
 }
 
@@ -1008,7 +1009,10 @@ _f4u$t.LayoutManager.prototype.do_spacing = function(x, y) {
   // the first padding will need to account for any additional space, thus
   // the call to jvalue with the leftover
   // use this.gravity, as object gravities will be used internally
-  var running_count = padding + _f4u$t.jvalue(leftover[this.o], _f4u$t.LEFT, this.gravity[this.o]);
+  running_count = padding;
+  if (this.constrain) { 
+    running_count += _f4u$t.jvalue(leftover[this.o], _f4u$t.LEFT, this.gravity[this.o]);
+  }
   for (var i = 0; i < this.objs.length; i++) {
     var obj = this.objs[i];
     var dim = obj.dims();
@@ -1017,9 +1021,11 @@ _f4u$t.LayoutManager.prototype.do_spacing = function(x, y) {
     var ny = _f4u$t.xy(this.o, y, dim[_f4u$t.Y_AXIS] * ratio);
     if (obj instanceof _f4u$t.LayoutManager) {
       // find offsets
+      var tmp = running_count;
       obj.x = _f4u$t.xy(this.o, running_count, this.constrain ? 0 : (dims[_f4u$t.X_AXIS] - dim[_f4u$t.X_AXIS]) / 2.0);
       obj.y = _f4u$t.xy(this.o, this.constrain ? 0 : (dims[_f4u$t.Y_AXIS] - dim[_f4u$t.Y_AXIS]) / 2.0, running_count);
       obj.do_spacing(nx, ny);
+      running_count = tmp; // <---- necessary, but why???
     }
     else if (obj instanceof _f4u$t.TabGroup) {
       obj.setX(_f4u$t.xy(this.o, running_count, 0));
@@ -1098,6 +1104,7 @@ _f4u$t.LayoutManager.prototype.make = function(svg, parent) {
 _f4u$t.TabGroup = function(options) {
   this.mom = options.mom || null;
   this.headroom = options.headroom || 40;
+  this.headpadding = options.headroom || 10;
   this.x_padding = options.x_padding || 10;
   this.x_width = options.x_width || 80;
   this.objs= options.objs || [];
@@ -1127,7 +1134,7 @@ _f4u$t.TabGroup.prototype.setX = function(x) {
 _f4u$t.TabGroup.prototype.setY = function(y) {
   this.y = y;
   for (var i = 0; i < this.objs.length; i++) {
-    this.objs[i].y = y + this.headroom;
+    this.objs[i].y = y + this.headroom + this.headpadding;
   }
 }
 
@@ -1149,7 +1156,7 @@ _f4u$t.TabGroup.prototype.viewport_dims = function() {
     x = Math.max(x, dim[0]);
     y = Math.max(y, dim[1]);
   }
-  return [Math.max(x, (this.x_width + this.x_padding) * this.objs.length - this.x_padding), y + this.headroom];
+  return [Math.max(x, (this.x_width + this.x_padding) * this.objs.length - this.x_padding), y + this.headroom + this.headpadding];
 }
 
 _f4u$t.TabGroup.prototype.dims = function() {
@@ -1160,14 +1167,14 @@ _f4u$t.TabGroup.prototype.dims = function() {
     x = Math.max(x, dim[0]);
     y = Math.max(y, dim[1]);
   }
-  return [Math.max(x, (this.x_width + this.x_padding) * this.objs.length - this.x_padding), y + this.headroom];
+  return [Math.max(x, (this.x_width + this.x_padding) * this.objs.length - this.x_padding), y + this.headroom + this.headpadding];
 }
 
 _f4u$t.TabGroup.prototype.do_spacing = function(x,y) {
   for (var i = 0; i < this.objs.length; i++) {
     this.objs[i].x = 0;
-    this.objs[i].y = this.headroom;
-    this.objs[i].do_spacing(x, y - this.headroom);
+    this.objs[i].y = this.headroom + this.headpadding;
+    this.objs[i].do_spacing(x, y - this.headroom - this.headpadding);
   }
 }
 
@@ -1180,7 +1187,7 @@ _f4u$t.TabGroup.prototype.make_label = function(svg, parent, x, y, l, goodid, ba
     {
       "text-anchor" : 'middle',
       transform : 'translate('+x+','+y+')',
-      onmousedown : '_f4u$t.shuffletabs('+this.x+','+(this.y + this.headroom)+',"'+goodid+'","'+badidstr+'")'
+      onmousedown : '_f4u$t.shuffletabs('+this.x+','+(this.y + this.headroom + this.headpadding)+',"'+goodid+'","'+badidstr+'")'
     }
   );
   
@@ -1194,7 +1201,7 @@ _f4u$t.TabGroup.prototype.make_tab = function(svg, parent, w, h, x, y, goodid, b
     {
       transform: 'translate('+x+','+y+')',
       style: 'fill:'+_f4u$t.color_to_rgb(fill)+';stroke:black;',
-      onmousedown : '_f4u$t.shuffletabs('+this.x+','+(this.y + this.headroom)+',"'+goodid+'","'+badidstr+'")'
+      onmousedown : '_f4u$t.shuffletabs('+this.x+','+(this.y + this.headroom + this.headpadding)+',"'+goodid+'","'+badidstr+'")'
     }
   );
   

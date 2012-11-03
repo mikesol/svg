@@ -40,7 +40,7 @@ _f4u$t.PALEGREEN = [152,251,152];
 _f4u$t.magic_color = function() {
   var r = Math.floor(Math.random() * 100) + 156;
   var g = Math.floor(Math.random() * 100) + 156;
-  var b = 430 - r - g;
+  var b = 530 - r - g;
   var v = [r,g,b];
   v.sort(function() {return 0.5 - Math.random()}) // shuffles
   return v;
