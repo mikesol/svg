@@ -629,7 +629,6 @@ _f4u$t.CheckBox.prototype.make_check = function(svg, parent, id) {
   var h = this.d;
   var dims = this.dims();
   var xo = (dims[0] - w) / 2.0;
-  console.log(xo);
   var box = svg.path(
     parent,
     "M0 0L"+this.d+" "+this.d+"M0 "+this.d+"L"+this.d+" 0",
@@ -976,33 +975,7 @@ _f4u$t.LayoutManager.prototype.get_ratio_and_leftover = function(x, y) {
   }
   return [1.0, [0.0, 0.0]];
 }
-/*
-_f4u$t.LayoutManager.prototype.get_real_points = function() {
-  var rp = [];
-  for (var i = 0; i < this.objs.length; i++) {
-    if (this.objs[i] instanceof _f4u$t.LayoutManager) {
-      rp = rp.concat(this.objs[i].get_real_points());
-    }
-    else {
-      var dim = this.objs[i].dims();
-      var x = this.objs[i].get_x_offset();
-      var y = this.objs[i].get_y_offset();
-      rp.push([x,y]);
-      rp.push([x+dim[0], y+dim[1]]);
-    }
-  }
-  // we want to account for padding for Y coordinates...
-  console.log(this.padding);
-  rp.sort(function(a,b){return a[1] - b[1]});
-  rp.push([rp[rp.length - 1][0], rp[rp.length - 1][1] + Math.max(this.lpadding_y, this.padding)]);
-  rp.push([rp[0][0], rp[0][1] - this.padding]);
-  // and now X coordinates...
-  rp.sort(function(a,b){return a[0] - b[0]});
-  rp.push([rp[rp.length - 1][0] + this.padding, rp[rp.length - 1][1]]);
-  rp.push([rp[0][0] - this.padding, rp[0][1]]);
-  return rp;
-}
-*/
+
 _f4u$t.LayoutManager.prototype.compress = function(coef) {
   for (var i = 0; i < this.objs.length; i++) {
     this.objs[i].compress(coef);
@@ -1048,7 +1021,6 @@ _f4u$t.LayoutManager.prototype.do_spacing = function(rawx, rawy) {
     if (obj instanceof _f4u$t.LayoutManager) {
       // find offsets
       obj.x = _f4u$t.xy(this.o, running_count, this.constrain ? 0 : (dims[_f4u$t.X_AXIS] - dim[_f4u$t.X_AXIS]) / 2.0);
-      //console.log(dims, dim, obj.x);
       obj.y = _f4u$t.xy(this.o, this.constrain ? 0 : (dims[_f4u$t.Y_AXIS] - dim[_f4u$t.Y_AXIS]) / 2.0, running_count);
       obj.do_spacing(nx, ny);
     }
