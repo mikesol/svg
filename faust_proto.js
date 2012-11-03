@@ -259,7 +259,7 @@ _f4u$t.make_ui = function(svg, raw_json) {
   var faust_svg = new _f4u$t.SVG(
     svg,
     // kludge to prevent scroll bars...
-    $(window).width() - 10,
+    $(window).width() - 15,
     // kludge to prevent scroll bars...
     $(window).height() - 17,
     {
