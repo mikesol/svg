@@ -35,10 +35,11 @@ _f4u$t.GREY = [100,100,100];
 _f4u$t.PINK = [233,150,122];
 _f4u$t.GREEN = [173,255,47];
 _f4u$t.KERMIT = [47,243,160];
+_f4u$t.PALEGREEN = [152,251,152];
 
 _f4u$t.magic_color = function() {
-  var r = Math.floor(Math.random() * 256);
-  var g = Math.floor(Math.random() * 256);
+  var r = Math.floor(Math.random() * 100) + 156;
+  var g = Math.floor(Math.random() * 100) + 156;
   var b = 430 - r - g;
   var v = [r,g,b];
   v.sort(function() {return 0.5 - Math.random()}) // shuffles
