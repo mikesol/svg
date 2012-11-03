@@ -208,6 +208,8 @@ _f4u$t.RotatingButton.prototype.make_joint = function(svg, parent, id) {
   var end = _f4u$t.coord_sub(_f4u$t.point_from_polar(this.r(), _f4u$t.d2r(this.a0 + this.sweep)), trans);
   var origin = _f4u$t.coord_sub([0,0], trans);
   var small = this.sweep < 180;
+  var dims = this.dims();
+  var xo = (dims[0] - (this.r() * 2)) / 2.0;
   var d = "M{0} {1}L{2} {3} A{4} {4} {5} 1 {6} {7}L{0} {1}";
   d = d.format([
     origin[0], origin[1],
@@ -222,7 +224,8 @@ _f4u$t.RotatingButton.prototype.make_joint = function(svg, parent, id) {
     d,
     {
       style : "fill:"+_f4u$t.color_to_rgb(this.fill)+";stroke:black;",
-      id : 'faust_rbutton_joint_'+id
+      id : 'faust_rbutton_joint_'+id,
+      transform : 'translate('+xo+',0)'
     }
   );
   
@@ -239,6 +242,8 @@ _f4u$t.RotatingButton.prototype.make_knob = function(svg, parent, id) {
   var origin = _f4u$t.coord_sub([0,0], trans);
   var small = this.sweep * this.sp < 180;
   var full_id = 'faust_rbutton_knob_'+id;
+  var dims = this.dims();
+  var xo = (dims[0] - (this.r() * 2)) / 2.0;
   var d = "M{0} {1}L{2} {3} A{4} {4} {5} 1 {6} {7}L{0} {1}";
   d = d.format([
     origin[0], origin[1],
@@ -254,7 +259,7 @@ _f4u$t.RotatingButton.prototype.make_knob = function(svg, parent, id) {
     {
       style : "fill:grey;stroke:black;",
       id : full_id,
-      transform : 'translate(0,0) scale(1,1) rotate('+(startp - half_slider_angle + 180)+','+origin[0]+','+origin[1]+')',
+      transform : 'translate('+xo+',0) scale(1,1) rotate('+(startp - half_slider_angle + 180)+','+origin[0]+','+origin[1]+')',
       onmousedown : '_f4u$t.activate_rbutton("'+full_id+'")'
     }
   );
@@ -266,13 +271,15 @@ _f4u$t.RotatingButton.prototype.make_anchor = function(svg, parent, id) {
   var trans = this.get_translation();
   var origin = _f4u$t.coord_sub([0,0], trans);
   var full_id = 'faust_rbutton_anchor_'+id;
+  var dims = this.dims();
+  var xo = (dims[0] - (this.r() * 2)) / 2.0;
 
   var anchor = svg.path(
     parent,
     "",
     {
       id : full_id,
-      transform : 'translate('+origin[0]+','+origin[1]+')',
+      transform : 'translate('+(origin[0] + xo)+','+origin[1]+')',
     }
   );
   
