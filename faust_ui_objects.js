@@ -961,10 +961,6 @@ _f4u$t.LayoutManager.prototype.dims = function() {
   return out;
 }
 
-_f4u$t.LayoutManager.prototype.viewport_dims = function() {
-  return this.dims();
-}
-
 _f4u$t.LayoutManager.prototype.compress = function(coef) {
   for (var i = 0; i < this.objs.length; i++) {
     this.objs[i].compress(coef);
@@ -1119,17 +1115,6 @@ _f4u$t.TabGroup.prototype.populate_objects = function() {
   }
 }
 
-_f4u$t.TabGroup.prototype.viewport_dims = function() {
-  var x = 0;
-  var y = 0;
-  for (var i = 0; i < this.objs.length; i++) {
-    var dim = this.objs[i].viewport_dims();
-    x = Math.max(x, dim[0]);
-    y = Math.max(y, dim[1]);
-  }
-  return [Math.max(x, (this.x_width + this.x_padding) * this.objs.length - this.x_padding), y + this.headroom + this.headpadding];
-}
-
 _f4u$t.TabGroup.prototype.dims = function() {
   var x = 0;
   var y = 0;
@@ -1255,7 +1240,7 @@ _f4u$t.SVG.prototype.make = function() {
   this.lm.do_spacing(this.w, this.h);
   this.lm.make(this.svg, this.svg);
   // if there is no constrain, the viewport needs to be scaled
-  var viewport_dims = this.lm.viewport_dims();
+  var viewport_dims = this.lm.dims();
   this.svg.configure(
     {
       viewBox: '0 0 '+viewport_dims[0]+' '+viewport_dims[1],
@@ -1265,4 +1250,3 @@ _f4u$t.SVG.prototype.make = function() {
     true);
   _f4u$t.VIEWPORT_SCALE = Math.min(this.w/viewport_dims[0], this.h/viewport_dims[1]);
 }
-
