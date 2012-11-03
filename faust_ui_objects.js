@@ -909,7 +909,6 @@ _f4u$t.LayoutManager = function(options) {
   this.o = options.o || _f4u$t.X_AXIS;
   this.padding = options.padding || 10;
   this.objs = options.objs || [];
-  this.constrain = options.constrain || false;
   this.gravity = options.gravity || [_f4u$t.CENTER, _f4u$t.CENTER];
   this.label = options.label || '';
   this.lpadding_y = options.lpaddiny_y || _f4u$t.TEXT_HEIGHT;
@@ -966,62 +965,33 @@ _f4u$t.LayoutManager.prototype.viewport_dims = function() {
   return this.dims();
 }
 
-_f4u$t.LayoutManager.prototype.get_ratio_and_leftover = function(x, y) {
-  if (this.constrain) {
-    var dims = this.internal_dims();
-    var ratio = Math.min(1.0 * x / dims[_f4u$t.X_AXIS], 1.0 * y / dims[_f4u$t.Y_AXIS]);
-    var leftover = [x - (dims[_f4u$t.X_AXIS] * ratio), y - (dims[_f4u$t.Y_AXIS] * ratio)];
-    return [ratio, leftover];
-  }
-  return [1.0, [0.0, 0.0]];
-}
-
 _f4u$t.LayoutManager.prototype.compress = function(coef) {
   for (var i = 0; i < this.objs.length; i++) {
     this.objs[i].compress(coef);
   }
 }
 
-_f4u$t.LayoutManager.prototype.do_spacing = function(rawx, rawy) {
+_f4u$t.LayoutManager.prototype.do_spacing = function() {
   var dims = this.dims();
-  var x = rawx;
-  var y = rawy;
-  if (!this.constrain) {
-    x = dims[0];
-    y = dims[1];
-  }
+  var x = dims[0];
+  var y = dims[1];
   this.w = x;
   this.h = y;
-  // first pass for compression
-  var ratio_and_leftover = this.get_ratio_and_leftover(x, y);
-  var ratio = ratio_and_leftover[0];
-  // now compress
-  if (ratio < 1) {
-    this.compress(ratio);
-  }
-  // second pass after compression
-  var ratio_and_leftover = this.get_ratio_and_leftover(x, y);
-  var ratio = ratio_and_leftover[0];
-  var leftover = ratio_and_leftover[1];
   // increase padding by size
-  var padding = this.padding * ratio;
+  var padding = this.padding;
   // the first padding will need to account for any additional space, thus
-  // the call to jvalue with the leftover
   // use this.gravity, as object gravities will be used internally
   var running_count = padding;
-  if (this.constrain) { 
-    running_count += _f4u$t.jvalue(leftover[this.o], _f4u$t.LEFT, this.gravity[this.o]);
-  }
   for (var i = 0; i < this.objs.length; i++) {
     var obj = this.objs[i];
     var dim = obj.dims();
     // find dimensions
-    var nx = _f4u$t.xy(this.o, dim[_f4u$t.X_AXIS] * ratio, x);
-    var ny = _f4u$t.xy(this.o, y, dim[_f4u$t.Y_AXIS] * ratio);
+    var nx = _f4u$t.xy(this.o, dim[_f4u$t.X_AXIS], x);
+    var ny = _f4u$t.xy(this.o, y, dim[_f4u$t.Y_AXIS]);
     if (obj instanceof _f4u$t.LayoutManager) {
       // find offsets
-      obj.x = _f4u$t.xy(this.o, running_count, this.constrain ? 0 : (dims[_f4u$t.X_AXIS] - dim[_f4u$t.X_AXIS]) / 2.0);
-      obj.y = _f4u$t.xy(this.o, this.constrain ? 0 : (dims[_f4u$t.Y_AXIS] - dim[_f4u$t.Y_AXIS]) / 2.0, running_count);
+      obj.x = _f4u$t.xy(this.o, running_count, (dims[_f4u$t.X_AXIS] - dim[_f4u$t.X_AXIS]) / 2.0);
+      obj.y = _f4u$t.xy(this.o, (dims[_f4u$t.Y_AXIS] - dim[_f4u$t.Y_AXIS]) / 2.0, running_count);
       obj.do_spacing(nx, ny);
     }
     else if (obj instanceof _f4u$t.TabGroup) {
@@ -1031,13 +1001,13 @@ _f4u$t.LayoutManager.prototype.do_spacing = function(rawx, rawy) {
     }
     else {
       var xv1 = _f4u$t.xy(this.o, running_count, 0);
-      var xv2 = _f4u$t.xy(this.o, running_count + (dim[_f4u$t.X_AXIS] * (ratio - 1)), (x - dim[_f4u$t.X_AXIS]) / 1.0);
+      var xv2 = _f4u$t.xy(this.o, running_count, (x - dim[_f4u$t.X_AXIS]) / 1.0);
       obj.x = _f4u$t.linear_combination(obj.gravity[_f4u$t.X_AXIS], xv1, xv2);
       var yv1 = _f4u$t.xy(this.o, 0, running_count);
-      var yv2 = _f4u$t.xy(this.o, (y - dim[_f4u$t.Y_AXIS]) / 1.0, running_count + (dim[_f4u$t.Y_AXIS] * (ratio - 1)));
+      var yv2 = _f4u$t.xy(this.o, (y - dim[_f4u$t.Y_AXIS]) / 1.0, running_count);
       obj.y = _f4u$t.linear_combination(obj.gravity[_f4u$t.Y_AXIS], yv1, yv2);
     }
-    running_count += padding + (_f4u$t.xy(this.o, dim[_f4u$t.X_AXIS], dim[_f4u$t.Y_AXIS]) * ratio);
+    running_count += padding + _f4u$t.xy(this.o, dim[_f4u$t.X_AXIS], dim[_f4u$t.Y_AXIS]);
   }
 }
 
@@ -1112,7 +1082,6 @@ _f4u$t.TabGroup = function(options) {
   this.objs= options.objs || [];
   this.def = options.def || 0;
   this.baselineSkip = options.baselineSkip || 5;
-  this.constrain = options.constrain || false;
   this.x = 0;
   this.y = 0;
   this.id = _f4u$t.randString();
@@ -1259,7 +1228,6 @@ _f4u$t.SVG = function(svg, w, h, options) {
   this.svg = svg;
   this.w = w;
   this.h = h;
-  this.constrain = options.constraion || false;
   this.lm = options.lm || null;
   this.title = options.title || '';
   this.lm.mom = this;
@@ -1276,30 +1244,25 @@ _f4u$t.SVG.prototype.get_y_offset = function() {
 }
 
 _f4u$t.SVG.prototype.make = function() {
-  if (!this.constrain) {    
-    this.svg.configure(
-      {
-        width : this.w+'px',
-        height: this.h+'px'
-      },
-      true);
-  }
+  this.svg.configure(
+    {
+      width : this.w+'px',
+      height: this.h+'px'
+    },
+    true);
   _f4u$t.ROOT = this.title;
   this.lm.populate_objects();
   this.lm.do_spacing(this.w, this.h);
   this.lm.make(this.svg, this.svg);
   // if there is no constrain, the viewport needs to be scaled
   var viewport_dims = this.lm.viewport_dims();
-  _f4u$t.VIEWPORT_SCALE = 1.0;
-  if (!this.constrain) {    
-    this.svg.configure(
-      {
-        viewBox: '0 0 '+viewport_dims[0]+' '+viewport_dims[1],
-        width : this.w+'px',
-        height: this.h+'px'
-      },
-      true);
-    _f4u$t.VIEWPORT_SCALE = Math.min(this.w/viewport_dims[0], this.h/viewport_dims[1]);
-  }
+  this.svg.configure(
+    {
+      viewBox: '0 0 '+viewport_dims[0]+' '+viewport_dims[1],
+      width : this.w+'px',
+      height: this.h+'px'
+    },
+    true);
+  _f4u$t.VIEWPORT_SCALE = Math.min(this.w/viewport_dims[0], this.h/viewport_dims[1]);
 }
 

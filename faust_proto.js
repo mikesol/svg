@@ -90,19 +90,6 @@ _f4u$t.sign = function(x) {
   return (x == 0 ? x : Math.floor(Math.abs(x) / x));
 }
 
-_f4u$t.jvalue = function(val, requested, actual) {
-  if (requested == 0) {
-    console.log("Do not know how to handle request.");
-  }
-  if (actual == _f4u$t.CENTER) {
-    return val / 2.0;
-  }
-  if (actual * requested == 1) {
-    return val;
-  }
-  return 0;
-}
-
 _f4u$t.linear_combination = function(dir, v1, v2) {
   if (dir == _f4u$t.LEFT) {
     return v1;
