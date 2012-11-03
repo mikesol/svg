@@ -11,7 +11,7 @@ _f4u$t.UIObject = function() {
 }
 
 _f4u$t.UIObject.prototype.make_group = function(svg, parent, id) {
-  out = svg.group(
+  var out = svg.group(
     parent,
     id,
     {
@@ -55,12 +55,14 @@ _f4u$t.IncrementalObject = function () {}
 _f4u$t.extend(_f4u$t.UIObject, _f4u$t.IncrementalObject);
 
 _f4u$t.IncrementalObject.prototype.make_value_box = function(svg, parent, id, mousedown) {
+  var dims = this.dims();
+  var xo = ((this.o == _f4u$t.Y_AXIS) || (this instanceof _f4u$t.RotatingButton) ? (dims[0] - this.value_box_w) / 2.0 : 0.0);
   var vb = svg.path(
     parent,
     "M0 0L"+this.value_box_w+" 0L"+this.value_box_w+" "+this.value_box_h+"L0 "+this.value_box_h+"L0 0",
     {
       id: 'faust_value_box_'+id,
-      transform: 'translate(0,'+(this.internal_dims()[1] + this.box_padding)+')',
+      transform: 'translate('+xo+','+(this.internal_dims()[1] + this.box_padding)+')',
       style: 'fill:white;stroke:black;',
       onmousedown : mousedown
     }
@@ -70,6 +72,8 @@ _f4u$t.IncrementalObject.prototype.make_value_box = function(svg, parent, id, mo
 }
 
 _f4u$t.IncrementalObject.prototype.make_value_value = function(svg, parent, id, mousedown) {
+  var dims = this.dims();
+  var xo = ((this.o == _f4u$t.Y_AXIS) || (this instanceof _f4u$t.RotatingButton) ? (dims[0] / 2.0) : this.box_padding);
   var vv = svg.text(
     parent,
     0,
@@ -77,7 +81,8 @@ _f4u$t.IncrementalObject.prototype.make_value_value = function(svg, parent, id, 
     this.def.toString(),
     {
       id: 'faust_value_value_'+id,
-      transform: 'translate('+this.box_padding+','+(this.internal_dims()[1] + this.lpadding_y)+')',
+      "text-anchor" : ((this.o == _f4u$t.Y_AXIS) || (this instanceof _f4u$t.RotatingButton) ? 'middle' : 'left'),
+      transform: 'translate('+xo+','+(this.internal_dims()[1] + this.lpadding_y)+')',
       onmousedown : (mousedown ? mousedown : '_f4u$t.devnull()')
     }
   );
@@ -92,6 +97,8 @@ _f4u$t.IncrementalObject.prototype.label_text = function() {
   return label;
 }
 _f4u$t.IncrementalObject.prototype.make_label = function(svg, parent, id) {
+  var dims = this.dims();
+  var xo = ((this.o == _f4u$t.Y_AXIS) || (this instanceof _f4u$t.RotatingButton) ? dims[0] / 2.0 : 0.0);
   var label = this.label_text();
   var vl = svg.text(
     parent,
@@ -100,7 +107,8 @@ _f4u$t.IncrementalObject.prototype.make_label = function(svg, parent, id) {
     label,
     {
       id: 'faust_label_'+id,
-      transform: 'translate(0,'+(this.internal_dims()[1] + this.lpadding_y + this.lpadding_y)+')'
+      "text-anchor" : ((this.o == _f4u$t.Y_AXIS) || (this instanceof _f4u$t.RotatingButton) ? 'middle' : 'left'),
+      transform: 'translate('+xo+','+(this.internal_dims()[1] + this.lpadding_y + this.lpadding_y)+')'
     }
   );
 
@@ -134,7 +142,6 @@ _f4u$t.RotatingButton = function(options) {
   this.mn = options.mn || 0;
   this.mx = options.mx || 100;
   this.def = _f4u$t.bound(options.def || 50, this.mn, this.mx);
-  this.step = options.step || 1;
   this.step = options.step || 1;
   this.lpadding_y = options.lpadding_y || _f4u$t.TEXT_HEIGHT;
   this.box_padding = options.box_padding || _f4u$t.TEXT_BOX_PADDING;
@@ -181,7 +188,7 @@ _f4u$t.RotatingButton.prototype.internal_dims = function() {
 _f4u$t.RotatingButton.prototype.dims = function() {
   var ugh = this.internal_dims();
   var text_w = _f4u$t.get_text_bbox(this.get_root_svg(), this.label_text()).width;
-  return [Math.max(ugh[0], this.value_box_w, text_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
+  return [Math.max(ugh[0], this.value_box_w, text_w), ugh[1] + (2 * this.lpadding_y)];
 }
 
 _f4u$t.RotatingButton.prototype.get_translation = function() {
@@ -351,7 +358,7 @@ _f4u$t.SlidingObject.prototype.internal_dims = function() {
 _f4u$t.SlidingObject.prototype.dims = function() {
   var ugh = this.internal_dims();
   var text_w = _f4u$t.get_text_bbox(this.get_root_svg(), this.label_text()).width;
-  ugh = [Math.max(ugh[0], this.value_box_w, text_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
+  ugh = [Math.max(ugh[0], this.value_box_w, text_w), ugh[1] + (2 * this.lpadding_y)];
   return ugh;
 }
 
@@ -364,9 +371,11 @@ _f4u$t.Slider = function(options) {
 _f4u$t.extend(_f4u$t.SlidingObject, _f4u$t.Slider);
 
 _f4u$t.Slider.prototype.make_joint = function(svg, parent, id) {
+  var dims = this.dims();
   var w = _f4u$t.xy(this.o, this.sa(), this.wa() / 3.0);
   var h = _f4u$t.xy(this.o, this.wa() / 3.0, this.sa());
-  var trans = _f4u$t.xy(this.o, 'translate(0,'+(this.wa() / 3.0)+')', 'translate('+(this.wa() / 3.0)+',0)');
+  var xo = ((this.o == _f4u$t.Y_AXIS) || (this instanceof _f4u$t.RotatingButton) ? (dims[0] - w) / 2.0 : 0.0);
+  var trans = _f4u$t.xy(this.o, 'translate(0,'+(this.wa() / 3.0)+')', 'translate('+xo+',0)');
   var joint = svg.path(
     parent,
     "M0 0L"+w+" 0L"+w+" "+h+"L0 "+h+"L0 0",
@@ -381,6 +390,7 @@ _f4u$t.Slider.prototype.make_joint = function(svg, parent, id) {
 }
 
 _f4u$t.Slider.prototype.make_knob = function(svg, parent, id) {
+  var dims = this.dims();
   var slider_girth = this.sa()  * this.sp;
   var half_slider_girth = slider_girth * 0.5;
   var startp = _f4u$t.xy(this.o, _f4u$t.remap, _f4u$t.remap_and_flip)(this.def, this.mn, this.mx, 0 + half_slider_girth, this.sa() - half_slider_girth);
@@ -388,7 +398,8 @@ _f4u$t.Slider.prototype.make_knob = function(svg, parent, id) {
   var top = startp + half_slider_girth;
   var w = _f4u$t.xy(this.o, slider_girth, this.wa());
   var h = _f4u$t.xy(this.o, this.wa(), slider_girth);
-  var x = _f4u$t.xy(this.o, bottom, 0);
+  var xo = ((this.o == _f4u$t.Y_AXIS) || (this instanceof _f4u$t.RotatingButton) ? (dims[0] - w) / 2.0 : 0.0);
+  var x = _f4u$t.xy(this.o, bottom, xo);
   var y = _f4u$t.xy(this.o, 0, bottom);
   var full_id = 'faust_'+this.type+'_knob_'+id;
   var activate_fn = "activate_"+this.type;
@@ -474,13 +485,16 @@ _f4u$t.BarGraph = function(options) {
 _f4u$t.extend(_f4u$t.SlidingObject, _f4u$t.BarGraph);
 
 _f4u$t.BarGraph.prototype.make_joint = function(svg, parent, id) {
+  var dims = this.dims();
   var w = _f4u$t.xy(this.o, this.sa(), this.wa());
   var h = _f4u$t.xy(this.o, this.wa(), this.sa());
+  var xo = ((this.o == _f4u$t.Y_AXIS) || (this instanceof _f4u$t.RotatingButton) ? (dims[0] - w) / 2.0 : 0.0);
   var joint = svg.path(
     parent,
     "M0 0L"+w+" 0L"+w+" "+h+"L0 "+h+"L0 0",
     {
       id : 'faust_'+this.type+'_joint_'+id,
+      transform : 'translate('+xo+',0)',
       style : "fill:"+_f4u$t.color_to_rgb(this.fill)+";stroke:black;"
     }
   );
@@ -490,9 +504,11 @@ _f4u$t.BarGraph.prototype.make_joint = function(svg, parent, id) {
 
 _f4u$t.BarGraph.prototype.make_meter = function(svg, parent, id) {
   var full_id = 'faust_'+this.type+'_meter_'+id;
-  def = _f4u$t.xy(this.o, _f4u$t.remap, _f4u$t.remap_and_flip)(this.def, this.mn, this.mx, 0, this.sa())
+  var def = _f4u$t.xy(this.o, _f4u$t.remap, _f4u$t.remap_and_flip)(this.def, this.mn, this.mx, 0, this.sa());
+  var dims = this.dims();
   var w = _f4u$t.xy(this.o, def, this.wa());
   var h = _f4u$t.xy(this.o, this.wa(), def);
+  var xo = ((this.o == _f4u$t.Y_AXIS) || (this instanceof _f4u$t.RotatingButton) ? (dims[0] - w) / 2.0 : 0.0);
   var meter = svg.path(
     parent,
     _f4u$t.xy(
@@ -502,6 +518,7 @@ _f4u$t.BarGraph.prototype.make_meter = function(svg, parent, id) {
     ),
     {
       id : full_id,
+      transform : 'translate('+xo+',0)',
       style : "fill:grey;stroke:black;"
     }
   );
@@ -581,7 +598,7 @@ _f4u$t.CheckBox.prototype.internal_dims = function() {
 _f4u$t.CheckBox.prototype.dims = function() {
   var ugh = this.internal_dims();
   var text_w = _f4u$t.get_text_bbox(this.get_root_svg(), this.label).width;
-  return [Math.max(ugh[0], text_w), ugh[1] + this.lpadding_y + _f4u$t.TEXT_PADDING]
+  return [Math.max(ugh[0], text_w), ugh[1] + this.lpadding_y]
 }
 
 // DON'T FORGET TO SPECIFY CHECK IN CALLBACK
@@ -589,6 +606,8 @@ _f4u$t.CheckBox.prototype.make_box = function(svg, parent, id) {
   var full_id = 'faust_checkbox_box_'+id;
   var w = this.d;
   var h = this.d;
+  var dims = this.dims();
+  var xo = (dims[0] - w) / 2.0;
   
   var box = svg.path(
     parent,
@@ -596,6 +615,7 @@ _f4u$t.CheckBox.prototype.make_box = function(svg, parent, id) {
     {
       id : full_id,
       style : "fill:white;stroke:black;",
+      transform : 'translate('+xo+',0)',
       onmousedown : '_f4u$t.change_checkbox("'+full_id+'")'
     }
   );
@@ -607,13 +627,17 @@ _f4u$t.CheckBox.prototype.make_check = function(svg, parent, id) {
   var full_id = 'faust_checkbox_check_'+id;
   var w = this.d;
   var h = this.d;
+  var dims = this.dims();
+  var xo = (dims[0] - w) / 2.0;
+  console.log(xo);
   var box = svg.path(
     parent,
     "M0 0L"+this.d+" "+this.d+"M0 "+this.d+"L"+this.d+" 0",
     {
       id : full_id,
       style : "stroke:black;opacity:"+(this.def == 1 ? 1.0 : 0.0)+";",
-      onmousedown : '_f4u$t.change_checkbox("'+full_id+'")'
+      onmousedown : '_f4u$t.change_checkbox("'+full_id+'")',
+      transform : 'translate('+xo+',0)'
     }
   );
 
@@ -787,7 +811,7 @@ _f4u$t.NumericalEntry.prototype.internal_dims = function() {
 _f4u$t.NumericalEntry.prototype.dims = function() {
   var ugh = this.internal_dims();
   var text_w = _f4u$t.get_text_bbox(this.get_root_svg(), this.label_text()).width;
-  ugh = [Math.max(ugh[0], this.value_box_w, text_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
+  ugh = [Math.max(ugh[0], this.value_box_w, text_w), ugh[1] + (2 * this.lpadding_y)];
   return ugh;
 }
 
@@ -895,7 +919,6 @@ _f4u$t.LayoutManager = function(options) {
   this.y = 0;
   this.w = 0;
   this.h = 0;
-  this.box_cache = new _f4u$t.Box();
   this.id = _f4u$t.randString();
   this.fill = _f4u$t.magic_color();
 }
@@ -903,8 +926,8 @@ _f4u$t.LayoutManager = function(options) {
 _f4u$t.extend(_f4u$t.UIObject, _f4u$t.LayoutManager);
 
 _f4u$t.LayoutManager.prototype.internal_dims = function() {
-  outx = [];
-  outy = [];
+  var outx = [];
+  var outy = [];
   for (var i = 0; i < this.objs.length; i++) {
     var dim = this.objs[i].dims();
     outx.push(dim[_f4u$t.X_AXIS]);
@@ -919,7 +942,7 @@ _f4u$t.LayoutManager.prototype.internal_dims = function() {
 
   //out[_f4u$t.other_axis(this.o)] += this.padding * 2;
   //out[this.o] += this.padding * (this.objs.length + 1);
-  out[this.o] += this.padding * (this.objs.length - 1);
+  out[this.o] += (this.padding * (this.objs.length - 1));
   return out;
 }
 
@@ -941,7 +964,7 @@ _f4u$t.LayoutManager.prototype.dims = function() {
 }
 
 _f4u$t.LayoutManager.prototype.viewport_dims = function() {
-  return this.box_cache.lens();
+  return this.dims();
 }
 
 _f4u$t.LayoutManager.prototype.get_ratio_and_leftover = function(x, y) {
@@ -953,8 +976,8 @@ _f4u$t.LayoutManager.prototype.get_ratio_and_leftover = function(x, y) {
   }
   return [1.0, [0.0, 0.0]];
 }
-
-_f4u$t.LayoutManager.prototype.get_real_points = function(x, y) {
+/*
+_f4u$t.LayoutManager.prototype.get_real_points = function() {
   var rp = [];
   for (var i = 0; i < this.objs.length; i++) {
     if (this.objs[i] instanceof _f4u$t.LayoutManager) {
@@ -969,6 +992,7 @@ _f4u$t.LayoutManager.prototype.get_real_points = function(x, y) {
     }
   }
   // we want to account for padding for Y coordinates...
+  console.log(this.padding);
   rp.sort(function(a,b){return a[1] - b[1]});
   rp.push([rp[rp.length - 1][0], rp[rp.length - 1][1] + Math.max(this.lpadding_y, this.padding)]);
   rp.push([rp[0][0], rp[0][1] - this.padding]);
@@ -978,15 +1002,17 @@ _f4u$t.LayoutManager.prototype.get_real_points = function(x, y) {
   rp.push([rp[0][0] - this.padding, rp[0][1]]);
   return rp;
 }
-
+*/
 _f4u$t.LayoutManager.prototype.compress = function(coef) {
   for (var i = 0; i < this.objs.length; i++) {
     this.objs[i].compress(coef);
   }
 }
 
-_f4u$t.LayoutManager.prototype.do_spacing = function(x, y) {
+_f4u$t.LayoutManager.prototype.do_spacing = function(rawx, rawy) {
   var dims = this.dims();
+  var x = rawx;
+  var y = rawy;
   if (!this.constrain) {
     x = dims[0];
     y = dims[1];
@@ -1009,7 +1035,7 @@ _f4u$t.LayoutManager.prototype.do_spacing = function(x, y) {
   // the first padding will need to account for any additional space, thus
   // the call to jvalue with the leftover
   // use this.gravity, as object gravities will be used internally
-  running_count = padding;
+  var running_count = padding;
   if (this.constrain) { 
     running_count += _f4u$t.jvalue(leftover[this.o], _f4u$t.LEFT, this.gravity[this.o]);
   }
@@ -1021,11 +1047,10 @@ _f4u$t.LayoutManager.prototype.do_spacing = function(x, y) {
     var ny = _f4u$t.xy(this.o, y, dim[_f4u$t.Y_AXIS] * ratio);
     if (obj instanceof _f4u$t.LayoutManager) {
       // find offsets
-      var tmp = running_count;
       obj.x = _f4u$t.xy(this.o, running_count, this.constrain ? 0 : (dims[_f4u$t.X_AXIS] - dim[_f4u$t.X_AXIS]) / 2.0);
+      //console.log(dims, dim, obj.x);
       obj.y = _f4u$t.xy(this.o, this.constrain ? 0 : (dims[_f4u$t.Y_AXIS] - dim[_f4u$t.Y_AXIS]) / 2.0, running_count);
       obj.do_spacing(nx, ny);
-      running_count = tmp; // <---- necessary, but why???
     }
     else if (obj instanceof _f4u$t.TabGroup) {
       obj.setX(_f4u$t.xy(this.o, running_count, 0));
@@ -1033,29 +1058,19 @@ _f4u$t.LayoutManager.prototype.do_spacing = function(x, y) {
       obj.do_spacing(nx, ny);
     }
     else {
-      xv1 = _f4u$t.xy(this.o, running_count, 0);
-      xv2 = _f4u$t.xy(this.o, running_count + (dim[_f4u$t.X_AXIS] * (ratio - 1)), x - dim[_f4u$t.X_AXIS]);
+      var xv1 = _f4u$t.xy(this.o, running_count, 0);
+      var xv2 = _f4u$t.xy(this.o, running_count + (dim[_f4u$t.X_AXIS] * (ratio - 1)), (x - dim[_f4u$t.X_AXIS]) / 1.0);
       obj.x = _f4u$t.linear_combination(obj.gravity[_f4u$t.X_AXIS], xv1, xv2);
-      yv1 = _f4u$t.xy(this.o, 0, running_count);
-      yv2 = _f4u$t.xy(this.o, y - dim[_f4u$t.Y_AXIS], running_count + (dim[_f4u$t.Y_AXIS] * (ratio - 1)));
+      var yv1 = _f4u$t.xy(this.o, 0, running_count);
+      var yv2 = _f4u$t.xy(this.o, (y - dim[_f4u$t.Y_AXIS]) / 1.0, running_count + (dim[_f4u$t.Y_AXIS] * (ratio - 1)));
       obj.y = _f4u$t.linear_combination(obj.gravity[_f4u$t.Y_AXIS], yv1, yv2);
     }
     running_count += padding + (_f4u$t.xy(this.o, dim[_f4u$t.X_AXIS], dim[_f4u$t.Y_AXIS]) * ratio);
   }
-  // we only want to draw boxes around content
-  var my_x = this.get_x_offset();
-  var my_y = this.get_y_offset();
-  var realpoints = this.get_real_points().map(function(pt) {
-    return _f4u$t.coord_sub(pt, [my_x, my_y]);
-  });
-  this.box_cache.clear(); // in case we do typesetting multiple times
-  for (var i = 0; i < realpoints.length; i++) {
-    this.box_cache.add_point(realpoints[i]);
-  }
 }
 
 _f4u$t.LayoutManager.prototype.make_label = function(svg, parent) {
-  full_id = 'faust_label_'+this.id;
+  var full_id = 'faust_label_'+this.id;
   var vl = svg.text(
     parent,
     0,
@@ -1063,7 +1078,7 @@ _f4u$t.LayoutManager.prototype.make_label = function(svg, parent) {
     this.label,
     {
       id : full_id,
-      transform: 'translate('+(this.box_cache.x[0] + 3)+','+(this.box_cache.y[1] - 3)+')'
+      transform: 'translate(2,'+(this.dims()[1] - 3)+')'
     }
   );
 
@@ -1071,21 +1086,35 @@ _f4u$t.LayoutManager.prototype.make_label = function(svg, parent) {
 }
 
 _f4u$t.LayoutManager.prototype.make_background = function(svg, parent) {
-  full_id = 'faust_background_'+this.id;
-  var w = this.box_cache.x[1] - this.box_cache.x[0];
-  var h = this.box_cache.y[1] - this.box_cache.y[0];
+  var full_id = 'faust_background_'+this.id;
+  var dims = this.dims();
+  var w = dims[0];
+  var h = dims[1];
   var d = "M0 0L"+w+" 0L"+w+" "+h+"L0 "+h+"L0 0";
   var background = svg.path(
     parent,
     d,
     {
       id : full_id,
-      transform: 'translate('+this.box_cache.x[0]+','+this.box_cache.y[0]+')',
       style: 'fill:'+_f4u$t.color_to_rgb(this.fill)+';stroke:black;'
     }
   );
 
   return background;
+}
+
+// only for debugging
+_f4u$t.LayoutManager.prototype.make_dim_cross = function(svg, parent) {
+  var dims = this.dims();
+  svg.path(
+    parent,
+    "M0 0L"+dims[0]+' '+dims[1],
+    {
+      style: 'stroke:black;'
+    }
+  );
+
+  //return background;
 }
 
 _f4u$t.LayoutManager.prototype.make = function(svg, parent) {
@@ -1098,6 +1127,7 @@ _f4u$t.LayoutManager.prototype.make = function(svg, parent) {
     this.objs[i].make(svg, g);
   }
 
+  //this.make_dim_cross(svg, g);
   return g;
 }
 
