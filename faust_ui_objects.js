@@ -1034,7 +1034,7 @@ _f4u$t.LayoutManager.prototype.make_background = function(svg, parent) {
     d,
     {
       id : full_id,
-      style: 'fill:'+_f4u$t.color_to_rgb(this.fill)+';stroke:black;'
+      style: 'fill:'+_f4u$t.color_to_rgb(this.fill)+';stroke:black;fill-opacity:0.2;'
     }
   );
 
@@ -1245,8 +1245,9 @@ _f4u$t.SVG.prototype.make = function() {
     {
       viewBox: '0 0 '+viewport_dims[0]+' '+viewport_dims[1],
       width : this.w+'px',
-      height: this.h+'px'
+      height: this.h+'px',
     },
     true);
+  
   _f4u$t.VIEWPORT_SCALE = Math.min(this.w/viewport_dims[0], this.h/viewport_dims[1]);
 }

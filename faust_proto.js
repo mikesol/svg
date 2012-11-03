@@ -271,3 +271,12 @@ _f4u$t.make_ui = function(svg, raw_json) {
   faust_svg.lm.mom = faust_svg;
   faust_svg.make();
 }
+
+_f4u$t.make_background = function(svg) {
+  //svg.circle(100, 100, 100, {fill:'blue'});
+  //console.log("OK");
+  svg.circle(75, 75, 50, { fill: 'none', stroke: 'red', strokeWidth: 3}); 
+  var g = svg.group({stroke: 'black', strokeWidth: 2});   
+  svg.line(g, 15, 75, 135, 75);   
+  svg.line(g, 75, 15, 75, 135);   
+}
