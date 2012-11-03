@@ -35,6 +35,13 @@ _f4u$t.UIObject.prototype.get_y_offset = function() {
   return this.y + this.mom.get_y_offset();
 }
 
+_f4u$t.UIObject.prototype.get_root_svg = function() {
+  if (!this.mom) {
+    return null;
+  }
+  return (this.mom.svg ? this.mom.svg : this.mom.get_root_svg());
+}
+
 _f4u$t.UIObject.prototype.compress = function() {
   // does nothing
 }
@@ -77,11 +84,15 @@ _f4u$t.IncrementalObject.prototype.make_value_value = function(svg, parent, id, 
   return vv;
 }
 
-_f4u$t.IncrementalObject.prototype.make_label = function(svg, parent, id) {
+_f4u$t.IncrementalObject.prototype.label_text = function() {
   var label = this.label;
   if (this.unit) {
     label += ' ('+this.unit+')';
   }
+  return label;
+}
+_f4u$t.IncrementalObject.prototype.make_label = function(svg, parent, id) {
+  var label = this.label_text();
   var vl = svg.text(
     parent,
     0,
@@ -92,6 +103,7 @@ _f4u$t.IncrementalObject.prototype.make_label = function(svg, parent, id) {
       transform: 'translate(0,'+(this.internal_dims()[1] + this.lpadding_y + this.lpadding_y)+')'
     }
   );
+
   return vl;
 }
 
@@ -168,7 +180,8 @@ _f4u$t.RotatingButton.prototype.internal_dims = function() {
 
 _f4u$t.RotatingButton.prototype.dims = function() {
   var ugh = this.internal_dims();
-  return [Math.max(ugh[0], this.value_box_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
+  var text_w = _f4u$t.get_text_bbox(this.get_root_svg(), this.label_text()).width;
+  return [Math.max(ugh[0], this.value_box_w, text_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
 }
 
 _f4u$t.RotatingButton.prototype.get_translation = function() {
@@ -338,7 +351,8 @@ _f4u$t.SlidingObject.prototype.internal_dims = function() {
 
 _f4u$t.SlidingObject.prototype.dims = function() {
   var ugh = this.internal_dims();
-  ugh = [Math.max(ugh[0], this.value_box_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
+  var text_w = _f4u$t.get_text_bbox(this.get_root_svg(), this.label_text()).width;
+  ugh = [Math.max(ugh[0], this.value_box_w, text_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
   return ugh;
 }
 
@@ -549,7 +563,8 @@ _f4u$t.CheckBox.prototype.internal_dims = function() {
 
 _f4u$t.CheckBox.prototype.dims = function() {
   var ugh = this.internal_dims();
-  return [ugh[0], ugh[1] + this.lpadding_y + _f4u$t.TEXT_PADDING + (this.d * 0.1 / this.MAGIC)]
+  var text_w = _f4u$t.get_text_bbox(this.get_root_svg(), this.label).width;
+  return [Math.max(ugh[0], text_w), ugh[1] + this.lpadding_y + _f4u$t.TEXT_PADDING + (this.d * 0.1 / this.MAGIC)]
 }
 
 // DON'T FORGET TO SPECIFY CHECK IN CALLBACK
@@ -756,7 +771,8 @@ _f4u$t.NumericalEntry.prototype.internal_dims = function() {
 
 _f4u$t.NumericalEntry.prototype.dims = function() {
   var ugh = this.internal_dims();
-  ugh = [Math.max(ugh[0], this.value_box_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
+  var text_w = _f4u$t.get_text_bbox(this.get_root_svg(), this.label_text()).width;
+  ugh = [Math.max(ugh[0], this.value_box_w, text_w), ugh[1] + (2 * this.lpadding_y) + _f4u$t.TEXT_PADDING];
   return ugh;
 }
 
@@ -903,7 +919,8 @@ _f4u$t.LayoutManager.prototype.populate_objects = function() {
 
 _f4u$t.LayoutManager.prototype.dims = function() {
   var ugh = this.internal_dims();
-  var out = [ugh[0], ugh[1] + Math.max(this.lpadding_y, this.padding) + this.padding + _f4u$t.TEXT_PADDING];
+  var text_w = _f4u$t.get_text_bbox(this.get_root_svg(), this.label).width;
+  var out = [Math.max(ugh[0], text_w), ugh[1] + Math.max(this.lpadding_y, this.padding) + this.padding + _f4u$t.TEXT_PADDING];
   return out;
 }
 

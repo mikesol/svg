@@ -258,6 +258,13 @@ Array.prototype.sum = function() {
   return sum;
 }
 
+_f4u$t.get_text_bbox = function(svg, text) {
+  var dummy = svg.text(0,0,text);
+  var bbox = dummy.getBBox();
+  svg.remove(dummy);
+  return bbox;
+}
+
 // main
 _f4u$t.make_ui = function(svg, raw_json) {
   var json = eval ("(" + raw_json + ")");
