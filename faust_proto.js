@@ -256,11 +256,12 @@ _f4u$t.get_text_bbox = function(svg, text) {
 // main
 _f4u$t.make_ui = function(svg, raw_json) {
   var json = eval ("(" + raw_json + ")");
-
   var faust_svg = new _f4u$t.SVG(
     svg,
-    $(window).width(),
-    $(window).height(),
+    // kludge to prevent scroll bars...
+    $(window).width() - 10,
+    // kludge to prevent scroll bars...
+    $(window).height() - 17,
     {
       constrain : false,
       title : json["ui"][0].label,
