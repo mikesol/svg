@@ -58,7 +58,6 @@ _f4u$t.dispatch = function(data) {
     if (values.length > 1) {
       var address = values[0];
       var value = Math.round(values[1]*10000)/10000;
-      //$('[name="'+address+'"]').val(value);
       var id = _f4u$t.PATHS_TO_IDS[address];
       var kind = _f4u$t.IDS_TO_ATTRIBUTES[id] ? _f4u$t.IDS_TO_ATTRIBUTES[id].type : null ;
       if (kind == 'vslider') { _f4u$t.update_vslider_value(id, value); }
@@ -78,7 +77,6 @@ _f4u$t.update = function() {
   $.get( "http://localhost:5510/"+_f4u$t.ROOT, function(data) { _f4u$t.dispatch( data ); } );
   setTimeout ( function() { _f4u$t.update(); }, 200);
 }
-// uncomment this once stuff is up and running.
-//otherwise there'll be tons of error messages all the time!
+
 $(document).ready(function() { _f4u$t.update(); });
 
